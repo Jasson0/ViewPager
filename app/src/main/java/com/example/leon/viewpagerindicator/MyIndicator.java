@@ -1,5 +1,6 @@
 package com.example.leon.viewpagerindicator;
 
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
@@ -9,11 +10,6 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewPropertyAnimator;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.TranslateAnimation;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,7 +21,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
  * Created by leon on 2017/9/6.
  */
 
-public class MyIndicator extends HorizontalScrollView implements ViewPager.OnPageChangeListener {
+public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeListener {
     private View mTabLayout;
     private ViewPager mViewPager;
     private PagerAdapter pagerAdapter;
@@ -86,12 +82,9 @@ public class MyIndicator extends HorizontalScrollView implements ViewPager.OnPag
         }
     }
 
-    private boolean isClick = false;
-
     private final OnClickListener mTabClickListener = new OnClickListener() {
         @Override
         public void onClick(View view) {
-            isClick = true;
             TabView tabView;
             if (!(view instanceof TabView)) {
                 return;
@@ -114,32 +107,8 @@ public class MyIndicator extends HorizontalScrollView implements ViewPager.OnPag
         }
         scrollX = currentIndicatorLeft
                 - (getWidth() - indicatorWidth) / tabCount;
-        if (isClick) {
-            animateToTab(position);
-        }
-        // this.post(runnable);
+        movePositionX(position);
     }
-
-    private void animateToTab(final int position) {
-        TranslateAnimation animation = new TranslateAnimation(currentIndicatorLeft,
-                indicatorWidth * position, 0f, 0f);
-        animation.setInterpolator(new LinearInterpolator());
-        animation.setDuration(300);
-        animation.setFillAfter(true);
-        // 执行位移动画
-        indicator.startAnimation(animation);
-        currentIndicatorLeft = indicatorWidth * position;
-        isClick = false;
-    }
-
-    private Runnable runnable = new Runnable() {
-
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-            smoothScrollTo(scrollX, 0);
-        }
-    };
 
     private void changeTabStyle(TabView tabView) {
         for (int i = 0; i < tabContent.getChildCount(); i++) {
@@ -167,11 +136,22 @@ public class MyIndicator extends HorizontalScrollView implements ViewPager.OnPag
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
         if (positionOffsetPixels != 0) {
-            indicator.animate()
-                    .translationX(positionOffsetPixels / tabCount)
-                    .setDuration(0)
-                    .start();
+            movePositionX(position, indicatorWidth * positionOffset);
+        } else {
+            movePositionX(position);
         }
+    }
+
+    private void movePositionX(int toPosition, float positionOffsetPixels) {
+        float curTranslationX = indicator.getTranslationX();
+        float toPositionX = indicatorWidth * toPosition + positionOffsetPixels;
+        ObjectAnimator animator = ObjectAnimator.ofFloat(indicator, "translationX", curTranslationX, toPositionX);
+        animator.setDuration(0);
+        animator.start();
+    }
+
+    private void movePositionX(int toPosition) {
+        movePositionX(toPosition, 0);
     }
 
     @Override
