@@ -1,40 +1,98 @@
 package com.example.leon.viewpagerindicator;
 
-import android.app.Activity;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import android.os.Handler;
+import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.support.v4.view.ViewPager;
 import android.view.View;
-import android.widget.TextView;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+
+import com.example.leon.viewpagerindicator.adapter.MyAdapter;
+import com.example.leon.viewpagerindicator.subviews.MyIndicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity implements GoTopShow{
+
+    RelativeLayout mainView;
     ViewPager viewPager;
     MyIndicator myIndicator;
+    ImageView goTop;
+
+    private Animation mShowAnimation;
+    private Animation mHideAnimation;
+
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        viewPager = findViewById(R.id.view_pager);
-        myIndicator = findViewById(R.id.my_indicator);
-        List<View> listView = new ArrayList<>();
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View view1 = inflater.inflate(R.layout.view1_layout, null);
-        View view2 = inflater.inflate(R.layout.view2_layout, null);
-        View view3 = inflater.inflate(R.layout.view3_layout, null);
-        listView.add(view1);
-        listView.add(view2);
-        listView.add(view3);
+        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        mainView = (RelativeLayout) findViewById(R.id.main_view);
+        myIndicator = (MyIndicator) findViewById(R.id.my_indicator);
+        goTop = (ImageView) findViewById(R.id.go_top);
         List<String> titleList = new ArrayList<>();
         titleList.add("leon");
         titleList.add("lulu");
         titleList.add("jasson");
-        MyAdapter myAdapter = new MyAdapter(listView, titleList);
+        TabFragment[] mFragments = new TabFragment[titleList.size()];
+
+        for (int i = 0; i < titleList.size(); i++) {
+            mFragments[i] = TabFragment.newInstance(titleList.get(i));
+        }
+        MyAdapter myAdapter = new MyAdapter(getSupportFragmentManager(), titleList);
+        myAdapter.setFragments(mFragments);
         viewPager.setAdapter(myAdapter);
+        setViewpagerHeight(viewPager);
         myIndicator.init(viewPager, this);
+    }
+
+    private boolean isMeasured = false;
+
+    private void setViewpagerHeight(final ViewPager viewPager) {
+        mainView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                if (!isMeasured) {
+                    int height = mainView.getHeight() - myIndicator.getHeight();
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                            height);
+                    viewPager.setLayoutParams(params);
+                    isMeasured = true;
+                }
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public void showTop() {
+        goTop.setVisibility(View.VISIBLE);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                goTop.setVisibility(View.GONE);
+            }
+        },1000);
+    }
+
+    private void playShowAnimation() {
+        mHideAnimation.cancel();
+        if (goTop != null) {
+            goTop.startAnimation(mShowAnimation);
+        }
+    }
+
+    private void playHideAnimation() {
+        mShowAnimation.cancel();
+        if (goTop != null) {
+            goTop.startAnimation(mHideAnimation);
+        }
     }
 }

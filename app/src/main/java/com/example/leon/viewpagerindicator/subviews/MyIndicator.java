@@ -1,4 +1,4 @@
-package com.example.leon.viewpagerindicator;
+package com.example.leon.viewpagerindicator.subviews;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
@@ -9,10 +9,13 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.example.leon.viewpagerindicator.R;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
@@ -28,12 +31,8 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
     private int tabCount;
     private ImageView indicator;
     private LinearLayout tabContent;
-    private int currentIndicatorLeft;
     private int indicatorWidth;
-    private int scrollX;
     private int windowWitdh;
-    private boolean isScrolling;
-    private boolean isLeaveScrolling;
 
 
     public MyIndicator(Context context) {
@@ -43,8 +42,8 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
     public MyIndicator(Context context, AttributeSet attrs) {
         super(context, attrs);
         mTabLayout = LayoutInflater.from(context).inflate(R.layout.tab_layout, this);
-        tabContent = mTabLayout.findViewById(R.id.tab_content);
-        indicator = mTabLayout.findViewById(R.id.img_indicator);
+        tabContent = (LinearLayout) mTabLayout.findViewById(R.id.tab_content);
+        indicator = (ImageView) mTabLayout.findViewById(R.id.img_indicator);
     }
 
     public void init(ViewPager viewPager, Activity activity) {
@@ -75,7 +74,7 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
         for (int i = 0; i < tabCount; i++) {
             String title = (String) pagerAdapter.getPageTitle(i);
             TabView tabView = new TabView(getContext(), i);
-            TextView textView = tabView.findViewById(R.id.tab_name);
+            TextView textView = (TextView) tabView.findViewById(R.id.tab_name);
             textView.setText(title);
             tabContent.addView(tabView, new LinearLayout.LayoutParams(0, MATCH_PARENT, 1));
             tabView.setOnClickListener(mTabClickListener);
@@ -105,19 +104,17 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
                 changeTabStyle((TabView) child);
             }
         }
-        scrollX = currentIndicatorLeft
-                - (getWidth() - indicatorWidth) / tabCount;
-        movePositionX(position);
+        movePositionX(position, 0);
     }
 
     private void changeTabStyle(TabView tabView) {
         for (int i = 0; i < tabContent.getChildCount(); i++) {
             TabView tv = (TabView) tabContent.getChildAt(i);
-            TextView tabText = tv.findViewById(R.id.tab_name);
+            TextView tabText = (TextView) tv.findViewById(R.id.tab_name);
             TextPaint tp = tabText.getPaint();
             tp.setFakeBoldText(false);
         }
-        TextView tabText = tabView.findViewById(R.id.tab_name);
+        TextView tabText = (TextView) tabView.findViewById(R.id.tab_name);
         TextPaint tp = tabText.getPaint();
         tp.setFakeBoldText(true);
     }
@@ -135,11 +132,7 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        if (positionOffsetPixels != 0) {
-            movePositionX(position, indicatorWidth * positionOffset);
-        } else {
-            movePositionX(position);
-        }
+            movePositionX(position, positionOffsetPixels/tabCount);
     }
 
     private void movePositionX(int toPosition, float positionOffsetPixels) {
@@ -150,10 +143,6 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
         animator.start();
     }
 
-    private void movePositionX(int toPosition) {
-        movePositionX(toPosition, 0);
-    }
-
     @Override
     public void onPageSelected(int position) {
         setCurrentTab(position);
@@ -161,20 +150,6 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
 
     @Override
     public void onPageScrollStateChanged(int state) {
-        switch (state) {
-            case 1:
-                isScrolling = true;
-                isLeaveScrolling = false;
-                break;
-            case 2:
-                isScrolling = false;
-                isLeaveScrolling = true;
-                break;
-            default:
-                isScrolling = false;
-                isLeaveScrolling = false;
-                break;
-        }
     }
 
 }
