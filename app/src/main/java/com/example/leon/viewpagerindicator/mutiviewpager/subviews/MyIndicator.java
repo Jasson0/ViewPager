@@ -1,4 +1,4 @@
-package com.example.leon.viewpagerindicator.subviews;
+package com.example.leon.viewpagerindicator.mutiviewpager.subviews;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
@@ -9,7 +9,6 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;

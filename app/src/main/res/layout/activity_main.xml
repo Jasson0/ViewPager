@@ -8,28 +8,89 @@
     android:orientation="vertical"
     tools:context="com.example.leon.viewpagerindicator.MainActivity">
 
-    <com.example.leon.viewpagerindicator.subviews.MutiLayout
+    <com.example.leon.viewpagerindicator.mutiviewpager.subviews.MutiLayout
         android:id="@+id/my_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:visibility="visible">
 
         <LinearLayout
             android:id="@+id/top_item"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:background="#ffffff"
-            android:orientation="horizontal"/>
+            android:orientation="vertical">
 
-        <com.example.leon.viewpagerindicator.subviews.MyIndicator
-            android:id="@+id/my_indicator"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"/>
+            <LinearLayout
+                android:id="@+id/top1"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="#123456"
+                android:orientation="horizontal"/>
 
-        <android.support.v4.view.ViewPager
-            android:id="@+id/view_pager"
+            <LinearLayout
+                android:id="@+id/top2"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="#fff345"
+                android:orientation="horizontal"/>
+
+            <LinearLayout
+                android:id="@+id/top3"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="#122234"
+                android:orientation="horizontal"/>
+
+            <LinearLayout
+                android:id="@+id/top4"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="#ff3334"
+                android:orientation="horizontal"/>
+
+            <LinearLayout
+                android:id="@+id/top5"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:background="#f12345"
+                android:orientation="horizontal"/>
+        </LinearLayout>
+
+        <com.example.leon.viewpagerindicator.mutiviewpager.subviews.IndicatorLayout
+            android:id="@+id/my_indicator_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </com.example.leon.viewpagerindicator.subviews.MutiLayout>
+            android:layout_height="wrap_content"
+            android:visibility="visible"/>
+
+    </com.example.leon.viewpagerindicator.mutiviewpager.subviews.MutiLayout>
+
+    <com.example.leon.viewpagerindicator.nestedscrolling.StickyNavLayout
+        android:id="@+id/nest_scrolling"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/top"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:background="#345643"/>
+
+        <TextView
+            android:id="@+id/indicator"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#000000"/>
+
+        <com.example.leon.viewpagerindicator.nestedscrolling.MyRecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </com.example.leon.viewpagerindicator.nestedscrolling.StickyNavLayout>
 
     <ImageView
         android:id="@+id/go_top"

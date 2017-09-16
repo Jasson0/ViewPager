@@ -1,10 +1,10 @@
-package com.example.leon.viewpagerindicator.adapter;
+package com.example.leon.viewpagerindicator.mutiviewpager;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.example.leon.viewpagerindicator.TabFragment;
+import com.example.leon.viewpagerindicator.mutiviewpager.TabFragment;
 
 import java.util.List;
 

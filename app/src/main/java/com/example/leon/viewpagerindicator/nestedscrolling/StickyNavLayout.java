@@ -1,11 +1,9 @@
-package com.example.leon.viewpagerindicator.subviews;
+package com.example.leon.viewpagerindicator.nestedscrolling;
 
 import android.content.Context;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.widget.RecyclerView;
+import android.support.v4.view.NestedScrollingParent;
+import android.support.v4.view.NestedScrollingParentHelper;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -14,20 +12,19 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.OverScroller;
+import android.widget.TextView;
 
-import com.example.leon.viewpagerindicator.GoTopShow;
 import com.example.leon.viewpagerindicator.R;
 
-
 /**
- * Created by leon on 2017/9/9.
+ * Created by leon on 2017/9/11.
  */
 
-public class MutiLayout extends LinearLayout {
-    private View topView;
-    private View indicator;
-    private ViewPager viewPager;
-    private RecyclerView recyclerView;
+public class StickyNavLayout extends LinearLayout implements NestedScrollingParent {
+    private TextView topView;
+    private TextView indicator;
+    private MyRecyclerView recyclerView;
+    private NestedScrollingParentHelper helper = new NestedScrollingParentHelper(this);
 
     private OverScroller scroller;
     private VelocityTracker mVelocityTracker;//滑动速度跟踪类
@@ -38,14 +35,11 @@ public class MutiLayout extends LinearLayout {
     private float mLastY;
 
     private boolean mDragging;
-    private boolean isTopHidden = false;
-    private GoTopShow goTopShow;
+    private boolean isInControl = false;
+    private int mLastOutScroll;
 
-    public void setGoTopShow(GoTopShow goTopShow) {
-        this.goTopShow = goTopShow;
-    }
 
-    public MutiLayout(Context context, AttributeSet attrs) {
+    public StickyNavLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         setOrientation(LinearLayout.VERTICAL);
 
@@ -59,15 +53,15 @@ public class MutiLayout extends LinearLayout {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        topView = findViewById(R.id.top_item);
-        indicator = findViewById(R.id.my_indicator);
-        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        topView = (TextView) findViewById(R.id.top);
+        indicator = (TextView) findViewById(R.id.indicator);
+        recyclerView = (MyRecyclerView) findViewById(R.id.recycler_view);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        ViewGroup.LayoutParams params = viewPager.getLayoutParams();
+        ViewGroup.LayoutParams params = recyclerView.getLayoutParams();
         params.height = getMeasuredHeight() - indicator.getMeasuredHeight();
     }
 
@@ -99,8 +93,13 @@ public class MutiLayout extends LinearLayout {
 
                 if (mDragging) {
                     scrollBy(0, (int) -dy);
+                    // 如果topView隐藏，且上滑动时，则改变当前事件为ACTION_DOWN
+                    if (getScrollY() == distanceFromViewPagerToX && dy < 0) {
+                        event.setAction(MotionEvent.ACTION_DOWN);
+                        dispatchTouchEvent(event);
+                        isInControl = false;
+                    }
                 }
-
                 mLastY = y;
                 break;
             case MotionEvent.ACTION_CANCEL:
@@ -113,6 +112,7 @@ public class MutiLayout extends LinearLayout {
             case MotionEvent.ACTION_UP:
                 mDragging = false;
                 //初始化
+                mLastOutScroll = getScrollY();
                 mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                 int velocityY = (int) mVelocityTracker.getYVelocity();
                 if (Math.abs(velocityY) > mMinimumVelocity) {
@@ -148,7 +148,7 @@ public class MutiLayout extends LinearLayout {
             super.scrollTo(x, y);
         }
 
-        isTopHidden = getScrollY() == distanceFromViewPagerToX;
+        super.scrollTo(x,y);
 
     }
 
@@ -160,56 +160,6 @@ public class MutiLayout extends LinearLayout {
         }
     }
 
-    private void getCurrentRecyclerView() {
-        int currentItem = viewPager.getCurrentItem();
-        PagerAdapter a = viewPager.getAdapter();
-        FragmentPagerAdapter fadapter = (FragmentPagerAdapter) a;
-        Fragment item = (Fragment) fadapter.instantiateItem(viewPager,
-                currentItem);
-        recyclerView = (RecyclerView) item.getView().findViewById(R.id.id_stickynavlayout_innerscrollview);
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        final int action = ev.getAction();
-        float y = ev.getY();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                if (!scroller.isFinished()) {
-                    return true;
-                }
-                mLastY = y;
-                break;
-            case MotionEvent.ACTION_MOVE:
-                float dy = y - mLastY;
-                getCurrentRecyclerView();
-                if (Math.abs(dy) > mTouchSlop) {
-                    //滑动
-                    mDragging = true;
-
-                    View view = recyclerView.getChildAt(0);
-                    // 拦截条件：topView没有隐藏
-                    // 或recyclerView在顶部 && topView隐藏 && 下拉
-                    if (!isTopHidden || (view != null && view.getTop() == 0 && isTopHidden && dy > 0)) {
-                        initVelocityTrackerIfNotExists();
-                        mLastY = y;
-                        mVelocityTracker.addMovement(ev);
-                        return true;
-                    } else {
-//                        if (goTopShow != null) {
-//                            goTopShow.showTop();
-//                        }
-                    }
-                }
-                break;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-                mDragging = false;
-                recycleVelocityTracker();
-                break;
-        }
-        return super.onInterceptTouchEvent(ev);
-    }
 
     private void initVelocityTrackerIfNotExists() {
         if (mVelocityTracker == null) {
@@ -222,5 +172,66 @@ public class MutiLayout extends LinearLayout {
             mVelocityTracker.recycle();
             mVelocityTracker = null;
         }
+    }
+
+
+    //以下：NestedScrollingParent接口------------------------------
+    @Override
+    public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
+        return true;
+    }
+
+    //移动edv_content
+    @Override
+    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+        if (!(target instanceof MyRecyclerView)) {
+            return;
+        }
+        boolean hiddenTop = dy > 0 && getScrollY() < distanceFromViewPagerToX;
+        boolean showTop = dy < 0 && getScrollY() >= 0 && !ViewCompat.canScrollVertically(target, -1);
+
+        if (hiddenTop || showTop) {
+            scrollBy(0, dy);
+            consumed[1] = dy;
+        }
+    }
+
+    @Override
+    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+    }
+
+//以下：NestedScrollingParent接口的其他方法
+
+    @Override
+    public void onNestedScrollAccepted(View child, View target, int nestedScrollAxes) {
+        helper.onNestedScrollAccepted(child, target, nestedScrollAxes);
+    }
+
+    @Override
+    public void onStopNestedScroll(View target) {
+        helper.onStopNestedScroll(target);
+    }
+
+    @Override
+    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+//        if (getScrollY() < topView.getMeasuredHeight()) {
+//            fling((int) velocityY);
+//            return true;
+//        }
+        return false;
+    }
+
+    @Override
+    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        if (getScrollY() < topView.getMeasuredHeight()) {
+            fling((int) velocityY);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int getNestedScrollAxes() {
+        return 0;
     }
 }

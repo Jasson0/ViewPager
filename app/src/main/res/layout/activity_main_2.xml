@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.leon.viewpagerindicator.viewDrag.VDHLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                        android:layout_width="wrap_content"
+                                                        android:layout_height="wrap_content"
+                                                        android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"
+        android:background="#44ff0000"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/move"
+            android:layout_width="100dp"
+            android:layout_height="20dp"
+            android:text="I dragged !"/>
+
+        <TextView
+            android:id="@+id/click"
+            android:layout_width="100dp"
+            android:layout_height="20dp"
+            android:layout_alignParentBottom="true"
+            android:text="click"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/my_layout"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:background="#44ff0000"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="leon"/>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"
+        android:background="#44ff0000"
+        android:gravity="center"
+        android:text="I can be dragged !"/>
+
+</com.example.leon.viewpagerindicator.viewDrag.VDHLayout>
