@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.leon.viewpagerindicator.R;
@@ -155,7 +156,7 @@ public class Indicator extends LinearLayout {
             extra = underLineLeftList.get(position + 1) - underLineLeftList.get(position);
             mLeft = (int) ((position + offset) * mWidth + underLineLeftList.get(position) + extra * offset);
             mRight = (int) ((position + 1 + offset) * mWidth - underLineLeftList.get(position) - extra * offset);
-        } 
+        }
         //容器移动,当tab处于移动至最后一个时
         if (position >= mVisibleCount - 2 && offset > 0 && mChildCount > mVisibleCount && position < mChildCount - 2) {
             if (mVisibleCount != 1) {
@@ -184,12 +185,18 @@ public class Indicator extends LinearLayout {
         TextView tv = new TextView(getContext());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         params.width = calculateViewWidth(mVisibleCount, 0);
+        RelativeLayout tvLinearLayout = new RelativeLayout(getContext());
+        tvLinearLayout.setLayoutParams(params);
+        RelativeLayout.LayoutParams paramtv = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        paramtv.addRule(RelativeLayout.CENTER_IN_PARENT);
         tv.setText(title);
+        tv.setId(R.id.tab_name);
         tv.setGravity(Gravity.CENTER);
         tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         tv.setTextColor(Color.parseColor("#000000"));
-        tv.setLayoutParams(params);
-        return tv;
+        tv.setLayoutParams(paramtv);
+        tvLinearLayout.addView(tv);
+        return tvLinearLayout;
     }
 
     private int calculateViewWidth(int visibleCount, int width) {
@@ -207,19 +214,14 @@ public class Indicator extends LinearLayout {
 
     private void calculateUnderlineWidth() {
         underLineList = new ArrayList<>();
+        int underLineMarginLeft = 0;
         underLineLeftList = new ArrayList<>();
         for (int i = 0; i < getChildCount(); i++) {
-            int textViewWidth = getChildAt(i).getWidth();
-            if (i == 0) {
-                underLineList.add(textViewWidth - 200);
-                underLineLeftList.add(100);
-            } else if (i < 2) {
-                underLineList.add(textViewWidth - 20);
-                underLineLeftList.add(10);
-            } else {
-                underLineList.add(textViewWidth - 200);
-                underLineLeftList.add(100);
-            }
+            RelativeLayout rl = (RelativeLayout) getChildAt(i);
+            int textViewWidth = rl.findViewById(R.id.tab_name).getWidth();
+            underLineList.add(textViewWidth + 100);
+            underLineMarginLeft = (rl.getWidth() - (textViewWidth + 100)) / 2;
+            underLineLeftList.add(underLineMarginLeft);
         }
     }
 

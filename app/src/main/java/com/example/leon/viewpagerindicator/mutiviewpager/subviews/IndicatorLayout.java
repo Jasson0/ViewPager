@@ -45,9 +45,9 @@ public class IndicatorLayout extends LinearLayout {
         titleList.add("leon");
         titleList.add("lulu");
         titleList.add("jasson");
+        titleList.add("lulu");
         titleList.add("jasson");
-        titleList.add("jasson");
-        titleList.add("jasson");
+        titleList.add("lulu");
         titleList.add("jasson");
         TabFragment[] mFragments = new TabFragment[titleList.size()];
 
