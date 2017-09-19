@@ -7,6 +7,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -42,6 +43,7 @@ public class MutiLayout extends ViewGroup {
     private int mActivePointerId;
 
     private boolean isPinnedView = false;
+    private int titleHeight = 0;
 
     public MutiLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -67,47 +69,31 @@ public class MutiLayout extends ViewGroup {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         final int size = getChildCount();
         final int parentWidthSize = MeasureSpec.getSize(widthMeasureSpec);
-        final int paretnHeightSize = MeasureSpec.getSize(heightMeasureSpec);
+        final int parentHeightSize = MeasureSpec.getSize(heightMeasureSpec);
         for (int i = 0; i < size; ++i) {
             final View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
-                LayoutParams childLp = child.getLayoutParams();
-                final boolean childWidthWC = childLp.width == LayoutParams.WRAP_CONTENT;
-                final boolean childHeightWC = childLp.height == LayoutParams.WRAP_CONTENT;
+                MarginLayoutParams childMarginLp = (MarginLayoutParams) child.getLayoutParams();
+                final boolean childWidthWC = childMarginLp.width == LayoutParams.WRAP_CONTENT;
+                final boolean childHeightWC = childMarginLp.height == LayoutParams.WRAP_CONTENT;
                 int childWidthMeasureSpec;
                 int childHeightMeasureSpec;
-                if (child.getLayoutParams() instanceof MarginLayoutParams) {
-                    MarginLayoutParams childMarginLp = (MarginLayoutParams) childLp;
-                    childWidthMeasureSpec = childWidthWC ? MeasureSpec
-                            .makeMeasureSpec(parentWidthSize,
-                                    MeasureSpec.UNSPECIFIED)
-                            : getChildMeasureSpec(widthMeasureSpec,
-                            getPaddingLeft() + getPaddingRight()
-                                    + childMarginLp.leftMargin
-                                    + childMarginLp.rightMargin,
-                            childLp.width);
-                    childHeightMeasureSpec = childHeightWC ? MeasureSpec
-                            .makeMeasureSpec(paretnHeightSize,
-                                    MeasureSpec.UNSPECIFIED)
-                            : getChildMeasureSpec(heightMeasureSpec,
-                            getPaddingTop() + getPaddingBottom()
-                                    + childMarginLp.topMargin
-                                    + childMarginLp.bottomMargin,
-                            childMarginLp.height);
-                } else {
-                    childWidthMeasureSpec = childWidthWC ? MeasureSpec
-                            .makeMeasureSpec(parentWidthSize,
-                                    MeasureSpec.UNSPECIFIED)
-                            : getChildMeasureSpec(widthMeasureSpec,
-                            getPaddingLeft() + getPaddingRight(),
-                            childLp.width);
-                    childHeightMeasureSpec = childHeightWC ? MeasureSpec
-                            .makeMeasureSpec(paretnHeightSize,
-                                    MeasureSpec.UNSPECIFIED)
-                            : getChildMeasureSpec(heightMeasureSpec,
-                            getPaddingTop() + getPaddingBottom(),
-                            childLp.height);
-                }
+                childWidthMeasureSpec = childWidthWC ? MeasureSpec
+                        .makeMeasureSpec(parentWidthSize,
+                                MeasureSpec.UNSPECIFIED)
+                        : getChildMeasureSpec(widthMeasureSpec,
+                        getPaddingLeft() + getPaddingRight()
+                                + childMarginLp.leftMargin
+                                + childMarginLp.rightMargin,
+                        childMarginLp.width);
+                childHeightMeasureSpec = childHeightWC ? MeasureSpec
+                        .makeMeasureSpec(parentHeightSize,
+                                MeasureSpec.UNSPECIFIED)
+                        : getChildMeasureSpec(heightMeasureSpec,
+                        getPaddingTop() + getPaddingBottom()
+                                + childMarginLp.topMargin
+                                + childMarginLp.bottomMargin,
+                        childMarginLp.height);
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             }
         }
@@ -116,6 +102,11 @@ public class MutiLayout extends ViewGroup {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+    }
+
+    @Override
+    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new MarginLayoutParams(getContext(), attrs);
     }
 
     @Override
@@ -317,11 +308,18 @@ public class MutiLayout extends ViewGroup {
                 }
             }
         }
-        distanceFromViewPagerToX = childStartPosition - lastHeight;
+        distanceFromViewPagerToX = (childStartPosition - lastHeight);
+        if (titleHeight != 0) {
+            distanceFromViewPagerToX -= titleHeight;
+        }
         if (isPinnedView) {
             ViewGroup.LayoutParams params = viewPager.getLayoutParams();
             params.height = getMeasuredHeight() - indicator.getMeasuredHeight();
         }
+    }
+
+    public void initDistance(int height) {
+        titleHeight = height;
     }
 
     private void initVelocityTrackerIfNotExists() {

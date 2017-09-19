@@ -7,19 +7,21 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.example.leon.viewpagerindicator.MainActivity">
+    <View
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"/>
 
     <com.example.leon.viewpagerindicator.mutiviewpager.subviews.MutiLayout
         android:id="@+id/my_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="10dp"
+        android:layout_height="wrap_content"
         android:visibility="visible">
 
         <LinearLayout
             android:id="@+id/top_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
             android:background="#ffffff"
             android:orientation="vertical">
 

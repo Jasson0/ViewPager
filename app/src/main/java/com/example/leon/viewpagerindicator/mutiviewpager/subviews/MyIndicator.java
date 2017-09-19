@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,7 +24,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
  * Created by leon on 2017/9/6.
  */
 
-public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeListener {
+public class MyIndicator extends HorizontalScrollView implements ViewPager.OnPageChangeListener {
     private View mTabLayout;
     private ViewPager mViewPager;
     private PagerAdapter pagerAdapter;
@@ -31,7 +32,7 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
     private ImageView indicator;
     private LinearLayout tabContent;
     private int indicatorWidth;
-    private int windowWitdh;
+    private int windowWidth;
 
 
     public MyIndicator(Context context) {
@@ -48,7 +49,7 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
     public void init(ViewPager viewPager, Activity activity) {
         DisplayMetrics dm = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        windowWitdh = dm.widthPixels;
+        windowWidth = dm.widthPixels;
         //防止重复定义
         if (mViewPager == viewPager) {
             return;
@@ -60,7 +61,8 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
         }
         mViewPager = viewPager;
         mViewPager.addOnPageChangeListener(this);
-        indicatorWidth = windowWitdh / pagerAdapter.getCount();
+//        indicatorWidth = windowWidth / pagerAdapter.getCount();
+        indicatorWidth = 300;
         LinearLayout.LayoutParams params1 = (LinearLayout.LayoutParams) indicator.getLayoutParams();
         params1.width = indicatorWidth;
         indicator.setLayoutParams(params1);
@@ -75,7 +77,7 @@ public class MyIndicator extends LinearLayout implements ViewPager.OnPageChangeL
             TabView tabView = new TabView(getContext(), i);
             TextView textView = (TextView) tabView.findViewById(R.id.tab_name);
             textView.setText(title);
-            tabContent.addView(tabView, new LinearLayout.LayoutParams(0, MATCH_PARENT, 1));
+            tabContent.addView(tabView, new LinearLayout.LayoutParams(300, MATCH_PARENT));
             tabView.setOnClickListener(mTabClickListener);
         }
     }

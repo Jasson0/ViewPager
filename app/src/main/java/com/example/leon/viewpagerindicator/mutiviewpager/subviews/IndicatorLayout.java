@@ -26,7 +26,7 @@ public class IndicatorLayout extends LinearLayout {
     private View rootView;
     RelativeLayout mainView;
     ViewPager viewPager;
-    MyIndicator myIndicator;
+    Indicator myIndicator;
     private Context context;
     public IndicatorLayout(Context context) {
         this(context, null);
@@ -40,10 +40,14 @@ public class IndicatorLayout extends LinearLayout {
 
     public void init(FragmentActivity activity) {
         viewPager = (ViewPager) findViewById(R.id.view_pager);
-        myIndicator = (MyIndicator) findViewById(R.id.my_indicator);
+        myIndicator = (Indicator) findViewById(R.id.my_indicator);
         List<String> titleList = new ArrayList<>();
         titleList.add("leon");
         titleList.add("lulu");
+        titleList.add("jasson");
+        titleList.add("jasson");
+        titleList.add("jasson");
+        titleList.add("jasson");
         titleList.add("jasson");
         TabFragment[] mFragments = new TabFragment[titleList.size()];
 
@@ -54,6 +58,7 @@ public class IndicatorLayout extends LinearLayout {
         myAdapter.setFragments(mFragments);
         viewPager.setAdapter(myAdapter);
         viewPager.setPageTransformer(true, new DepthPageTransformer());
-        myIndicator.init(viewPager, activity);
+        myIndicator.setTabItemTitles(titleList,4);
+        myIndicator.setViewPager(viewPager);
     }
 }

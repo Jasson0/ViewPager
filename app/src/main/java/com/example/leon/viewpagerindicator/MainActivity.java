@@ -2,11 +2,18 @@ package com.example.leon.viewpagerindicator;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.example.leon.viewpagerindicator.mutiviewpager.subviews.Indicator;
 import com.example.leon.viewpagerindicator.mutiviewpager.subviews.IndicatorLayout;
+import com.example.leon.viewpagerindicator.mutiviewpager.subviews.MutiLayout;
 import com.example.leon.viewpagerindicator.nestedscrolling.StickyNavLayout;
 import com.zhy.base.adapter.ViewHolder;
 import com.zhy.base.adapter.recyclerview.CommonAdapter;
@@ -14,21 +21,77 @@ import com.zhy.base.adapter.recyclerview.CommonAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends FragmentActivity{
+public class MainActivity extends FragmentActivity {
 
     ImageView goTop;
 
     StickyNavLayout stickyNavLayout;
     RecyclerView recyclerView;
     IndicatorLayout indicatorLayout;
+    MutiLayout mutiLayout;
+
+
+    private Indicator mIndicator;
+    private ViewPager mContainer;
+    private List<String> titleList;
+    private ArrayList<TextView> mViews = new ArrayList<TextView>(4);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         indicatorLayout = (IndicatorLayout) findViewById(R.id.my_indicator_layout);
+        mutiLayout = (MutiLayout) findViewById(R.id.my_view);
         indicatorLayout.init(this);
 //        setContentView(R.layout.activity_main_2);
+//        setContentView(R.layout.activity_main_4);
+//
+//        mIndicator = (Indicator) findViewById(R.id.indicator);
+//        titleList = new ArrayList<>();
+//        titleList.add("leon");
+//        titleList.add("lulu");
+//        titleList.add("jasson");
+//        titleList.add("jasson");
+//        titleList.add("jasson");
+//        titleList.add("jasson");
+//        titleList.add("jasson");
+//        mIndicator.setTabItemTitles(titleList);
+//        mContainer = (ViewPager) findViewById(R.id.container);
+//
+//        initViews();
+//        mContainer.setAdapter(new PagerAdapter() {
+//            @Override
+//            public boolean isViewFromObject(View arg0, Object arg1) {
+//                return arg0 == arg1;
+//            }
+//
+//            @Override
+//            public int getCount() {
+//                return mViews.size();
+//            }
+//
+//            @Override
+//            public Object instantiateItem(ViewGroup container, int position) {
+//                View view = mViews.get(position);
+//                container.addView(view);
+//                return view;
+//            }
+//
+//            @Override
+//            public void destroyItem(ViewGroup container, int position,
+//                                    Object object) {
+//                container.removeView(mViews.get(position));
+//            }
+//        });
+//        mIndicator.setViewPager(mContainer);
+    }
+
+    private void initViews() {
+        for (int i = 0; i < titleList.size(); i++) {
+            TextView tv = new TextView(this);
+            tv.setText("hello android" + i);
+            mViews.add(tv);
+        }
     }
 
     private void initNestScrolling() {
