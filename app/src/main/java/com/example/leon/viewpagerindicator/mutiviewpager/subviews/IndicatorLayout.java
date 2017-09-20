@@ -58,7 +58,7 @@ public class IndicatorLayout extends LinearLayout {
         myAdapter.setFragments(mFragments);
         viewPager.setAdapter(myAdapter);
         viewPager.setPageTransformer(true, new DepthPageTransformer());
-        myIndicator.setTabItemTitles(titleList,4);
         myIndicator.setViewPager(viewPager);
+        myIndicator.setTabItemTitles(titleList,4);
     }
 }
