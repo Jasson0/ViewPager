@@ -1,12 +1,26 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="#44ff0000"
-              android:scrollbars="none"
-              android:orientation="horizontal">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:background="#44ff0000"
+                android:orientation="horizontal"
+                android:scrollbars="none">
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/id_stickynavlayout_innerscrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/go_top"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/go_top"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+
+</RelativeLayout>

@@ -42,13 +42,9 @@ public class IndicatorLayout extends LinearLayout {
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         myIndicator = (Indicator) findViewById(R.id.my_indicator);
         List<String> titleList = new ArrayList<>();
-        titleList.add("leon");
-        titleList.add("lulu");
-        titleList.add("jasson");
-        titleList.add("lulu");
-        titleList.add("jasson");
-        titleList.add("lulu");
-        titleList.add("jasson");
+        titleList.add("推荐");
+        titleList.add("游记");
+        titleList.add("吃喝玩乐");
         TabFragment[] mFragments = new TabFragment[titleList.size()];
 
         for (int i = 0; i < titleList.size(); i++) {
@@ -59,6 +55,6 @@ public class IndicatorLayout extends LinearLayout {
         viewPager.setAdapter(myAdapter);
         viewPager.setPageTransformer(true, new DepthPageTransformer());
         myIndicator.setViewPager(viewPager);
-        myIndicator.setTabItemTitles(titleList,4);
+        myIndicator.setTabItemTitles(titleList);
     }
 }

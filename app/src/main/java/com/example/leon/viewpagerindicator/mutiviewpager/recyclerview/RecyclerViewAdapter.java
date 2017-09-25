@@ -19,16 +19,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<MyViewHolder> {
     static final int TYPE_ITEM = 0;
     //脚布局
     static final int TYPE_FOOTER = 1;
-    private int footer_state;
 
+    public FooterHolder footerHolder;
     @Override
     public int getItemViewType(int position) {
-//        if (position + 1 == getItemCount()) {
-//            return TYPE_FOOTER;
-//        } else {
-//            return TYPE_ITEM;
-//        }
-        return super.getItemViewType(position);
+        if (position + 1 == getItemCount()) {
+            return TYPE_FOOTER;
+        } else {
+            return TYPE_ITEM;
+        }
     }
 
     private List<String> dataList;
@@ -59,24 +58,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<MyViewHolder> {
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//        if (viewType == TYPE_ITEM) {
+        if (viewType == TYPE_ITEM) {
             return MyViewHolder.createViewHolder(context, parent, R.layout.item);
-//        }
-//        return MyViewHolder.createViewHolder(context, parent, R.layout.foot);
-    }
-
-    public void changeState(int state) {
-        this.footer_state = state;
-        notifyDataSetChanged();
+        }
+        footerHolder = FooterHolder.createViewHolder(context, parent, R.layout.foot_layout);
+        footerHolder.initFootView(R.id.loading_view,R.id.end_views,R.id.network_error_views);
+        return footerHolder;
     }
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
-        holder.setText(R.id.id_info, dataList.get(position));
+        if (position < getItemCount()-1)
+            holder.setText(R.id.id_info, dataList.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return dataList.size();
+        return dataList.size() == 0 ? 0 : dataList.size() + 1;
     }
 }

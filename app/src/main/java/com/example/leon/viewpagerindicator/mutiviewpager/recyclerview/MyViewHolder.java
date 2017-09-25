@@ -18,7 +18,7 @@ public class MyViewHolder extends RecyclerView.ViewHolder {
     private View mConvertView;
     private Context mContext;
 
-    private MyViewHolder(Context context, View itemView) {
+    public MyViewHolder(Context context, View itemView) {
         super(itemView);
         mContext = context;
         mConvertView = itemView;
@@ -38,7 +38,7 @@ public class MyViewHolder extends RecyclerView.ViewHolder {
         return holder;
     }
 
-    private  <T extends View> T getView(int viewId) {
+    protected  <T extends View> T getView(int viewId) {
         View view = mViews.get(viewId);
         if (view == null) {
             view = mConvertView.findViewById(viewId);

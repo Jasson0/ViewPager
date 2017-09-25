@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:paddingBottom="10dip"
         android:paddingTop="10dip"
-        android:weightSum="4"
         indicator:visiable_count="4"
         indicator:color="#FFFF0000" >
 

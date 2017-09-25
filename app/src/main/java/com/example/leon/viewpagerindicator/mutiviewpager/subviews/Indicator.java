@@ -23,6 +23,8 @@ import com.example.leon.viewpagerindicator.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.graphics.Color.parseColor;
+
 /**
  * Created by leon on 2017/9/18.
  */
@@ -33,14 +35,14 @@ public class Indicator extends LinearLayout {
     private int mTop; // 指示符的top
     private int mLeft; // 指示符的left
     private int mRight; // 指示符的right
-    private int mWidth; // 指示符的width
-    private int mHeight = 5; // 指示符的高度，固定了
+    private int mHeight = 3; // 指示符的高度，固定了
     private int mColor; // 指示符的颜色
     private int mChildCount; // 子item的个数，用于计算指示符的宽度
     private int mVisibleCount;//课件的tab个数
     public List<String> titles;//tab的内容List
     private List<Integer> underLineList;//各个下划线长度的List
     private List<Integer> underLineLeftList;//各个下划线离左边的长度
+    private int tabViewWidth = 0;//各个tab的长度
 
     private ViewPager viewPager;
     /**
@@ -50,7 +52,7 @@ public class Indicator extends LinearLayout {
 
     public Indicator(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setBackgroundColor(Color.TRANSPARENT);  // 必须设置背景，否则onDraw不执行
+        setBackgroundColor(Color.parseColor("#FFFFFF"));  // 必须设置背景，否则onDraw不执行
         // 获取自定义属性 指示符的颜色
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.Indicator, 0, 0);
         mColor = ta.getColor(R.styleable.Indicator_color, 0X0000FF);
@@ -75,7 +77,6 @@ public class Indicator extends LinearLayout {
         mTop = getMeasuredHeight(); // 测量的高度即指示符的顶部位置
         int width = getMeasuredWidth(); // 获取测量的总宽度
         int height = mTop + mHeight; // 重新定义一下测量的高度
-        mWidth = width / mVisibleCount; // 指示符的宽度为总宽度/item的个数
         setMeasuredDimension(width, height);
     }
 
@@ -94,18 +95,6 @@ public class Indicator extends LinearLayout {
         canvas.drawRect(rect, mPaint); // 绘制该矩形
     }
 
-    public interface OnPageChangeListener {
-        void onPageScrolled(int position, float positionOffset, int positionOffsetPixels);
-
-        void onPageSelected(int position);
-
-        void onPageScrollStateChanged(int state);
-    }
-
-    public void setOnChangeListener(OnPageChangeListener onPageChangeListener) {
-        this.onPageChangeListener = onPageChangeListener;
-    }
-
     public void setViewPager(ViewPager viewPager) {
         this.viewPager = viewPager;
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -122,7 +111,7 @@ public class Indicator extends LinearLayout {
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageSelected(position);
                 }
-
+                highlightText(position);
             }
 
             @Override
@@ -137,28 +126,41 @@ public class Indicator extends LinearLayout {
     }
 
     //必须在setViewPager之后调用
-    public void setTabItemTitles(List<String> titles, int mVisibleCount) {
-        this.mVisibleCount = mVisibleCount;
+    public void setTabItemTitles(List<String> titles) {
+        if (titles.size() < mVisibleCount) {
+            mVisibleCount = titles.size();
+        }
         if (titles != null) {
             this.removeAllViews();
             this.titles = titles;
         }
+        tabViewWidth = calculateViewWidth(mVisibleCount, 330);
         mChildCount = titles.size();
         for (int i = 0; i < titles.size(); i++) {
             View view = generateTextView(titles.get(i));
+            if (mVisibleCount <= 3) {
+                LinearLayout.LayoutParams pm = (LayoutParams) view.getLayoutParams();
+                if (i == 0) {
+                    pm.leftMargin = tabViewWidth / 2;
+                } else if (i == (mVisibleCount - 1)) {
+                    pm.rightMargin = tabViewWidth / 2;
+                }
+                view.setLayoutParams(pm);
+            }
             addView(view);
             final int finalI = i;
             view.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     viewPager.setCurrentItem(finalI);
+                    highlightText(finalI);
                 }
             });
         }
     }
 
     /**
-     *用来获取屏幕宽度
+     * 用来获取屏幕宽度
      */
     private int getScreenWidth() {
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
@@ -169,6 +171,7 @@ public class Indicator extends LinearLayout {
 
     /**
      * 用来执行下划线滑动的核心类
+     *
      * @param position
      * @param offset
      */
@@ -176,15 +179,19 @@ public class Indicator extends LinearLayout {
         int extra;
         if (position >= 0 && position < getChildCount() - 1) {
             extra = underLineLeftList.get(position + 1) - underLineLeftList.get(position);
-            mLeft = (int) ((position + offset) * mWidth + underLineLeftList.get(position) + extra * offset);
-            mRight = (int) ((position + 1 + offset) * mWidth - underLineLeftList.get(position) - extra * offset);
+            mLeft = (int) ((position + offset) * tabViewWidth + underLineLeftList.get(position) + extra * offset);
+            mRight = (int) ((position + 1 + offset) * tabViewWidth - underLineLeftList.get(position) - extra * offset);
+            if (mVisibleCount <= 3) {
+                mLeft += tabViewWidth / 2;
+                mRight += tabViewWidth / 2;
+            }
         }
         //容器移动,当tab处于移动至最后一个时
-        if (position >= mVisibleCount - 2 && offset > 0 && mChildCount > mVisibleCount && position < mChildCount - 2) {
+        if (position >= mVisibleCount - 2 && offset > 0 && mChildCount > mVisibleCount && position < mChildCount - 1) {
             if (mVisibleCount != 1) {
-                this.scrollTo((int) ((position - (mVisibleCount - 2)) * mWidth + mWidth * offset), 0);
+                this.scrollTo((int) ((position - (mVisibleCount - 2)) * tabViewWidth + tabViewWidth * offset), 0);
             } else {
-                this.scrollTo((int) (position * mWidth + mWidth * offset), 0);
+                this.scrollTo((int) (position * tabViewWidth + tabViewWidth * offset), 0);
             }
         }
         //调用invalidate的时候会去进行重绘，调用onDraw，
@@ -193,13 +200,14 @@ public class Indicator extends LinearLayout {
 
     /**
      * 用来生成tab 目前暂定为TextView
+     *
      * @param title
      * @return
      */
     private View generateTextView(String title) {
         TextView tv = new TextView(getContext());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        params.width = calculateViewWidth(mVisibleCount, 0);
+        params.width = tabViewWidth;
         RelativeLayout tvLinearLayout = new RelativeLayout(getContext());
         tvLinearLayout.setLayoutParams(params);
         RelativeLayout.LayoutParams paramtv = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -207,8 +215,8 @@ public class Indicator extends LinearLayout {
         tv.setText(title);
         tv.setId(R.id.tab_name);
         tv.setGravity(Gravity.CENTER);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        tv.setTextColor(Color.parseColor("#000000"));
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        tv.setTextColor(parseColor("#222222"));
         tv.setLayoutParams(paramtv);
         tvLinearLayout.addView(tv);
         return tvLinearLayout;
@@ -216,6 +224,7 @@ public class Indicator extends LinearLayout {
 
     /**
      * 用来计算整个view的宽度，规则由设计确定
+     *
      * @param visibleCount
      * @param width
      * @return
@@ -233,16 +242,59 @@ public class Indicator extends LinearLayout {
     /**
      * 用来计算下划线的长度和下划线离view左侧的距离。目前规则是居中
      */
+    private boolean isFirst = true;
+
     private void calculateUnderlineWidth() {
-        underLineList = new ArrayList<>();
-        int underLineMarginLeft = 0;
-        underLineLeftList = new ArrayList<>();
-        for (int i = 0; i < getChildCount(); i++) {
-            RelativeLayout rl = (RelativeLayout) getChildAt(i);
-            int textViewWidth = rl.findViewById(R.id.tab_name).getWidth();
-            underLineList.add(textViewWidth + 100);
-            underLineMarginLeft = (rl.getWidth() - (textViewWidth + 100)) / 2;
-            underLineLeftList.add(underLineMarginLeft);
+        if (isFirst) {
+            underLineList = new ArrayList<>();
+            int underLineMarginLeft = 0;
+            underLineLeftList = new ArrayList<>();
+            for (int i = 0; i < getChildCount(); i++) {
+                RelativeLayout rl = (RelativeLayout) getChildAt(i);
+                int textViewWidth = rl.findViewById(R.id.tab_name).getWidth();
+                underLineList.add(textViewWidth + 60);
+                underLineMarginLeft = (rl.getWidth() - (textViewWidth + 60)) / 2;
+                TextView textView = (TextView) rl.findViewById(R.id.tab_name);
+                RelativeLayout.LayoutParams pm = (RelativeLayout.LayoutParams) textView.getLayoutParams();
+                pm.height = LinearLayout.LayoutParams.MATCH_PARENT;
+                pm.width = textViewWidth + 60;
+                textView.setLayoutParams(pm);
+                if (i <= 3) {
+                    underLineLeftList.add(underLineMarginLeft);
+                } else {
+                    underLineLeftList.add(underLineMarginLeft);
+                }
+            }
+            isFirst = false;
         }
     }
+
+    /**
+     * 用来改变字的颜色
+     */
+    private void highlightText(int position) {
+        for (int i = 0; i < getChildCount(); i++) {
+            RelativeLayout rl = (RelativeLayout) getChildAt(i);
+            TextView tv = (TextView) rl.findViewById(R.id.tab_name);
+            tv.setTextColor(parseColor("#222222"));
+            tv.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        }
+        RelativeLayout rl = (RelativeLayout) getChildAt(position);
+        TextView tv = (TextView) rl.findViewById(R.id.tab_name);
+        tv.setTextColor(parseColor("#0099F7"));
+        tv.setBackgroundColor(Color.parseColor("#F7F7F7"));
+    }
+
+    public interface OnPageChangeListener {
+        void onPageScrolled(int position, float positionOffset, int positionOffsetPixels);
+
+        void onPageSelected(int position);
+
+        void onPageScrollStateChanged(int state);
+    }
+
+    public void setOnChangeListener(OnPageChangeListener onPageChangeListener) {
+        this.onPageChangeListener = onPageChangeListener;
+    }
+
 }
