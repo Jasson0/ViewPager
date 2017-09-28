@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 
 import java.sql.Time;
@@ -26,10 +27,12 @@ import com.example.leon.viewpagerindicator.MainActivity;
 import com.example.leon.viewpagerindicator.R;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.EndLessOnScroll;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.FooterHolder;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.OnItemClickListener;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.RecyclerViewAdapter;
 
-public class TabFragment extends Fragment {
+public class TabFragment extends Fragment implements OnItemClickListener {
     public static final String TITLE = "title";
+    public static final String DATA = "data";
     private String mTitle = "Defaut Value";
     // 服务器端一共多少条数据
     private static final int TOTAL_COUNTER = 24;
@@ -47,23 +50,29 @@ public class TabFragment extends Fragment {
     private Animation showAnimation;
     private Animation hiddenAnimation;
 
+    public RecyclerView getmRecyclerView() {
+        return mRecyclerView;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mTitle = getArguments().getString(TITLE);
+            mDatas = (List<String>) getArguments().getSerializable(DATA);
         }
         showAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_up);
         hiddenAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down);
     }
 
+    private int temp = 0;
+
+    private long lastTime;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tab, container, false);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.id_stickynavlayout_innerscrollview);
-        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView.setLayoutManager(linearLayoutManager);
         goTop = (ImageView) view.findViewById(R.id.go_top);
         goTop.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,24 +80,48 @@ public class TabFragment extends Fragment {
                 mRecyclerView.smoothScrollToPosition(0);
             }
         });
-        for (int i = 0; i < 20; i++) {
-            mDatas.add(mTitle + " -> " + i);
-        }
         adapter = new RecyclerViewAdapter(getContext(), mDatas);
+        adapter.setOnItemClickListener(this);
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.id_stickynavlayout_innerscrollview);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            public void onScrollStateChanged(final RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 Log.d("test", "StateChanged = " + newState);
+                setState(FooterHolder.State.Loading);
+                final int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (lastVisibleItemPosition + 1 == adapter.getItemCount()) {
+                        Log.d("test", "loading executed");
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (mCurrentCounter < TOTAL_COUNTER) {
+                                    getData();
+                                    Log.d("test", "load more completed");
+//                                    setState(FooterHolder.State.Normal);
+                                } else {
+//                                setState(FooterHolder.State.NoMore);
+//                            recyclerView.smoothScrollToPosition(lastVisibleItemPosition-2);
+                                    recyclerView.smoothScrollBy(0, -200);
+//                            adapter.remove(adapter.getItemCount() - 1);
+//                                setState(FooterHolder.State.NetWorkError);
+                                }
+                            }
+                        }, 1000);
+//                    temp++;
+                    }
+                }
             }
 
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            public void onScrolled(final RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 Log.d("test", "onScrolled");
-                setState(FooterHolder.State.Loading);
-                int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+                final int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
                 if (lastVisibleItemPosition > 20) {
                     if (goTop.getVisibility() == View.GONE) {
                         goTop.startAnimation(showAnimation);
@@ -100,21 +133,6 @@ public class TabFragment extends Fragment {
                         goTop.startAnimation(hiddenAnimation);
                     }
                     goTop.setVisibility(View.GONE);
-                }
-                if (lastVisibleItemPosition + 1 == adapter.getItemCount()) {
-                    Log.d("test", "loading executed");
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mCurrentCounter < TOTAL_COUNTER) {
-                                getData();
-                                Log.d("test", "load more completed");
-                                setState(FooterHolder.State.Normal);
-                            } else {
-                                setState(FooterHolder.State.NoMore);
-                            }
-                        }
-                    }, 1000);
                 }
             }
         });
@@ -142,19 +160,32 @@ public class TabFragment extends Fragment {
      * 获取测试数据
      */
     private void getData() {
+        List<String> newData = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
-            mDatas.add("上拉加载产生" + i);
+            newData.add("上拉加载产生" + i);
         }
+        mDatas.addAll(newData);
         mCurrentCounter += 6;
+        adapter.setDataList(mDatas);
         adapter.notifyDataSetChanged();
     }
 
-    public static TabFragment newInstance(String title) {
+    public static TabFragment newInstance(String title, ArrayList<String> dataList) {
         TabFragment tabFragment = new TabFragment();
         Bundle bundle = new Bundle();
         bundle.putString(TITLE, title);
+        bundle.putSerializable(DATA, dataList);
         tabFragment.setArguments(bundle);
         return tabFragment;
     }
 
+    @Override
+    public void onItemClick(ViewGroup parent, View view, Object o, int position) {
+        Toast.makeText(getContext(),"11111",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onItemLongClick(ViewGroup parent, View view, Object o, int position) {
+        return false;
+    }
 }

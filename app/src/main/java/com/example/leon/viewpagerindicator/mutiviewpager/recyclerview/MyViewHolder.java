@@ -47,6 +47,11 @@ public class MyViewHolder extends RecyclerView.ViewHolder {
         return (T) view;
     }
 
+    public View getConvertView()
+    {
+        return mConvertView;
+    }
+
     /****以下为辅助方法，可以根据需要自行添加，不要把view相关的代码卸载adapter中*****/
 
     /**

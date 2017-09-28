@@ -14,6 +14,7 @@ import com.example.leon.viewpagerindicator.R;
 import com.example.leon.viewpagerindicator.mutiviewpager.MyAdapter;
 import com.example.leon.viewpagerindicator.mutiviewpager.TabFragment;
 import com.example.leon.viewpagerindicator.mutiviewpager.anim.DepthPageTransformer;
+import com.example.leon.viewpagerindicator.mutiviewpager.utils.ToolUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class IndicatorLayout extends LinearLayout {
     RelativeLayout mainView;
     ViewPager viewPager;
     Indicator myIndicator;
+    ScrollIndicator scrollIndicator;
     private Context context;
     public IndicatorLayout(Context context) {
         this(context, null);
@@ -40,21 +42,33 @@ public class IndicatorLayout extends LinearLayout {
 
     public void init(FragmentActivity activity) {
         viewPager = (ViewPager) findViewById(R.id.view_pager);
-        myIndicator = (Indicator) findViewById(R.id.my_indicator);
+        scrollIndicator = (ScrollIndicator) findViewById(R.id.my_indicator);
         List<String> titleList = new ArrayList<>();
         titleList.add("推荐");
+        titleList.add("旅行游记");
+        titleList.add("旅行游记");
         titleList.add("游记");
-        titleList.add("吃喝玩乐");
+        titleList.add("旅行游记");
+        titleList.add("游记");
+        titleList.add("游记");
+        ArrayList<String> mDatas = new ArrayList<>();
+        for (int j = 0; j < 20; j++) {
+            mDatas.add("222" + " -> " + 1);
+        }
         TabFragment[] mFragments = new TabFragment[titleList.size()];
-
         for (int i = 0; i < titleList.size(); i++) {
-            mFragments[i] = TabFragment.newInstance(titleList.get(i));
+            ArrayList<String> leon = new ArrayList<>();
+            for (int j = 0; j < mDatas.size(); j++) {
+                leon.add(mDatas.get(i));
+            }
+            mFragments[i] = TabFragment.newInstance(titleList.get(i),leon);
         }
         MyAdapter myAdapter = new MyAdapter(activity.getSupportFragmentManager(), titleList);
         myAdapter.setFragments(mFragments);
         viewPager.setAdapter(myAdapter);
-        viewPager.setPageTransformer(true, new DepthPageTransformer());
-        myIndicator.setViewPager(viewPager);
-        myIndicator.setTabItemTitles(titleList);
+//        viewPager.setPageTransformer(true, new DepthPageTransformer());
+        scrollIndicator.setViewPager(viewPager);
+        scrollIndicator.setFragments(mFragments);
+        scrollIndicator.setTabItemTitles(titleList, ToolUtil.getPxFromDip(getContext(),16), ToolUtil.getPxFromDip(getContext(),32));
     }
 }

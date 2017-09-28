@@ -14,11 +14,13 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.leon.viewpagerindicator.R;
+import com.example.leon.viewpagerindicator.mutiviewpager.TabFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,11 @@ public class Indicator extends LinearLayout {
     private int tabViewWidth = 0;//各个tab的长度
 
     private ViewPager viewPager;
+    private int currentPosition;
+    private TabFragment[] mFragments;
+    public void setFragments(TabFragment[] mFragments) {
+        this.mFragments = mFragments;
+    }
     /**
      * 当自定义控件本身将接口使用时，需要提供给用户同样的回调
      */
@@ -139,7 +146,7 @@ public class Indicator extends LinearLayout {
         for (int i = 0; i < titles.size(); i++) {
             View view = generateTextView(titles.get(i));
             if (mVisibleCount <= 3) {
-                LinearLayout.LayoutParams pm = (LayoutParams) view.getLayoutParams();
+                LinearLayout.LayoutParams pm = (LinearLayout.LayoutParams) view.getLayoutParams();
                 if (i == 0) {
                     pm.leftMargin = tabViewWidth / 2;
                 } else if (i == (mVisibleCount - 1)) {
@@ -152,6 +159,9 @@ public class Indicator extends LinearLayout {
             view.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (finalI == currentPosition) {
+                        mFragments[finalI].getmRecyclerView().smoothScrollToPosition(0);
+                    }
                     viewPager.setCurrentItem(finalI);
                     highlightText(finalI);
                 }
@@ -273,6 +283,7 @@ public class Indicator extends LinearLayout {
      * 用来改变字的颜色
      */
     private void highlightText(int position) {
+        currentPosition = position;
         for (int i = 0; i < getChildCount(); i++) {
             RelativeLayout rl = (RelativeLayout) getChildAt(i);
             TextView tv = (TextView) rl.findViewById(R.id.tab_name);

@@ -4,5 +4,13 @@
     <declare-styleable name="Indicator">
         <attr name="color" format="color"/>
         <attr name="visiable_count" format="integer"/>
+        <attr name="text_view_height" format="integer"/>
+        <attr name="text_size" format="integer"/>
+        <attr name="text_normal_color" format="color"/>
+        <attr name="text_hl_color" format="color"/>
+        <attr name="dynamic_line_color" format="color"/>
+        <attr name="dynamic_line_height" format="color"/>
+        <attr name="dynamic_line_xRadius" format="integer"/>
+        <attr name="dynamic_line_yRadius" format="integer"/>
     </declare-styleable>
 </resources>
