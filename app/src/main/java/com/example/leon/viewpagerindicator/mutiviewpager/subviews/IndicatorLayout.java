@@ -45,10 +45,13 @@ public class IndicatorLayout extends LinearLayout {
         scrollIndicator = (ScrollIndicator) findViewById(R.id.my_indicator);
         List<String> titleList = new ArrayList<>();
         titleList.add("推荐");
-        titleList.add("旅行游记");
-        titleList.add("旅行游记");
         titleList.add("游记");
-        titleList.add("旅行游记");
+        titleList.add("游记");
+        titleList.add("游记");
+        titleList.add("游记");
+        titleList.add("游记");
+        titleList.add("游记");
+        titleList.add("游记");
         titleList.add("游记");
         titleList.add("游记");
         ArrayList<String> mDatas = new ArrayList<>();
@@ -69,6 +72,6 @@ public class IndicatorLayout extends LinearLayout {
 //        viewPager.setPageTransformer(true, new DepthPageTransformer());
         scrollIndicator.setViewPager(viewPager);
         scrollIndicator.setFragments(mFragments);
-        scrollIndicator.setTabItemTitles(titleList, ToolUtil.getPxFromDip(getContext(),16), ToolUtil.getPxFromDip(getContext(),32));
+        scrollIndicator.setTabItemTitles(titleList, ToolUtil.getPxFromDip(getContext(),16), ToolUtil.getPxFromDip(getContext(),32), ScrollIndicator.TabLayoutType.MUTI);
     }
 }

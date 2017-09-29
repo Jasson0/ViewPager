@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -31,9 +30,18 @@ import java.util.List;
 
 public class ScrollIndicator extends HorizontalScrollView {
     /**
+     * 目前支持的类型，均分，有margin的均分（margin=tabWidth/2，小于4个）,MUTI指的是超过4个的情况
+     */
+    public enum TabLayoutType {
+        AVERAGE,
+        AVERAGE_MARGIN,
+        MUTI,
+    }
+
+    /**
      * 自定义属性
      */
-    private int mVisibleCount;//可见的tab个数
+    private int tabNumber;//可见的tab个数
     private int textLayoutHeight;
     private int textSize;
     private int normalColor;
@@ -47,7 +55,7 @@ public class ScrollIndicator extends HorizontalScrollView {
     private int tabViewWidth = 0;//各个tab的长度,当tab数量大于4时，此时已经不是均分，因此tabViewWidth已经无用
     private int marginLeft = 0;//左间距
     private ArrayList<Integer> underlineWidthList = new ArrayList<>();//下划线的长度,每条下划线长度不同，需要用List保存
-    private int marginText;
+    private int marginText;//下划线和内部text的间隔
 
     private ViewPager viewPager;
     private TabFragment[] mFragments;
@@ -68,11 +76,16 @@ public class ScrollIndicator extends HorizontalScrollView {
      * 当自定义控件本身将接口使用时，需要提供给用户同样的回调
      */
     private OnPageChangeListener onPageChangeListener;
+    private Context context;
+    private int screenWidth;
+
+    private TabLayoutType type;
 
     public ScrollIndicator(Context context, AttributeSet attrs) {
         super(context, attrs);
+        this.context = context;
+        screenWidth = ToolUtil.getScreenWidth(context);
         initAttr(attrs);
-        marginText = ToolUtil.getPxFromDip(context, 40);
         createDynamicLine();
         setBackgroundColor(Color.parseColor("#FFFFFF"));
         setHorizontalScrollBarEnabled(false);//去除滑动条
@@ -91,9 +104,8 @@ public class ScrollIndicator extends HorizontalScrollView {
      * @param attrs
      */
     private void initAttr(AttributeSet attrs) {
-        TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.Indicator, 0, 0);
-        mVisibleCount = ta.getInteger(R.styleable.Indicator_visiable_count, 4);
-        textLayoutHeight = ToolUtil.getPxFromDip(getContext(), ta.getInteger(R.styleable.Indicator_text_view_height, 0));
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.Indicator, 0, 0);
+        textLayoutHeight = ToolUtil.getPxFromDip(context, ta.getInteger(R.styleable.Indicator_text_view_height, 0));
         textSize = ta.getInteger(R.styleable.Indicator_text_size, 16);
         normalColor = ta.getColor(R.styleable.Indicator_text_normal_color, Color.parseColor("#222222"));
         highLightColor = ta.getColor(R.styleable.Indicator_text_hl_color, Color.parseColor("#0099F7"));
@@ -109,7 +121,7 @@ public class ScrollIndicator extends HorizontalScrollView {
      */
     private void createDynamicLine() {
         ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dynamicLine = new DynamicLine(getContext());
+        dynamicLine = new DynamicLine(context);
         dynamicLine.init(dynamicColor, dynamicHeight, xRadius, yRadius);
         dynamicLine.setLayoutParams(params);
     }
@@ -171,10 +183,10 @@ public class ScrollIndicator extends HorizontalScrollView {
                          * 下面几行代码，解决页面滑到的TAB页时对应的TextView对应，TextView处于屏幕外面，
                          * 这个时候就需要将HorizontalScrollView滑动到屏幕中间。
                          */
-                        if (location[0] > ToolUtil.getScreenWidth(getContext())/2 && scrollRight) {
-                            ScrollIndicator.this.smoothScrollBy(location[0]-ToolUtil.getScreenWidth(getContext())/2, 0);
-                        } else if (location[0] < ToolUtil.getScreenWidth(getContext())/2 && !scrollRight) {
-                            ScrollIndicator.this.smoothScrollBy(location[0]-ToolUtil.getScreenWidth(getContext())/2, 0);
+                        if (location[0] > screenWidth / 2 && scrollRight) {
+                            ScrollIndicator.this.smoothScrollBy(location[0] - screenWidth / 2, 0);
+                        } else if (location[0] < screenWidth / 2 && !scrollRight) {
+                            ScrollIndicator.this.smoothScrollBy(location[0] - screenWidth / 2, 0);
                         }
                     }
                 }
@@ -184,21 +196,23 @@ public class ScrollIndicator extends HorizontalScrollView {
     }
 
     /**
-     * 设置tab的内容
+     * 设置tab的一些参数
      *
      * @param titles
+     * @param marginLeft 最左边的tab离左侧的间距
+     * @param marginText text和下划线宽度的差值
+     * @param type       tab分布的类型，目前支持3种
      */
-    public void setTabItemTitles(List<String> titles, int marginLeft, int marginText) {
+    public void setTabItemTitles(List<String> titles, int marginLeft, int marginText, TabLayoutType type) {
         this.marginLeft = marginLeft;
         this.marginText = marginText;
-        tabViewWidth = TabUtil.getTabWidth(getContext(), mVisibleCount);
-        if (titles.size() < mVisibleCount) {
-            mVisibleCount = titles.size();
-        }
+        this.type = type;
+        tabNumber = titles.size();
         if (titles != null) {
             textLayout.removeAllViews();
             this.titles = titles;
         }
+        tabViewWidth = getTabWidth(tabNumber);
         for (int i = 0; i < titles.size(); i++) {
             View view = generateTextView(titles.get(i), i);
             textLayout.addView(view);
@@ -219,28 +233,27 @@ public class ScrollIndicator extends HorizontalScrollView {
         contentLayout.addView(dynamicLine);
     }
 
-    /**
-     * 如果超过visible的个数的时候，需要将整个horizontalView横移
-     */
-    private void scroll(boolean scrollRight) {
-        if (scrollRight) {
-            this.smoothScrollBy(ToolUtil.getScreenWidth(getContext()) / 2, 0);
+    private int getTabWidth(int visibleCount) {
+        if (type == TabLayoutType.AVERAGE) {
+            return screenWidth / (visibleCount);
+        } else if (type == TabLayoutType.AVERAGE_MARGIN) {
+            return screenWidth / (visibleCount + 1);
         } else {
-            this.smoothScrollBy(-ToolUtil.getScreenWidth(getContext()) / 2, 0);
+            return screenWidth / visibleCount;
         }
     }
 
     /**
-     * 用来生成tab 目前暂定为TextView,决定它的layoutparams
+     * 用来生成tab 目前暂定为TextView,决定它的layoutParams
      *
      * @param title
      * @return
      */
     private View generateTextView(String title, final int position) {
-        final TextView tv = new TextView(getContext());
+        final TextView tv = new TextView(context);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         params.width = tabViewWidth;
-        if (marginLeft == 0) {
+        if (type == TabLayoutType.AVERAGE_MARGIN) {
             marginLeft = tabViewWidth / 2;
         }
         //处理margin
@@ -249,13 +262,12 @@ public class ScrollIndicator extends HorizontalScrollView {
         } else if (position == titles.size() - 1) {
             params.rightMargin = marginLeft;
         }
-        RelativeLayout tvRl = new RelativeLayout(getContext());
+        RelativeLayout tvRl = new RelativeLayout(context);
         tvRl.setLayoutParams(params);
 
         RelativeLayout.LayoutParams paramtv = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         paramtv.addRule(RelativeLayout.CENTER_IN_PARENT);
         tv.setText(title);
-        tv.getWidth();
         tv.setId(R.id.tab_name);
         tv.setGravity(Gravity.CENTER);
         tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, textSize);
@@ -267,6 +279,12 @@ public class ScrollIndicator extends HorizontalScrollView {
         return tvRl;
     }
 
+    /**
+     * 给text设置全局观察者，需要当textview被measure之后才能动态确定每条underline的长度
+     *
+     * @param tv
+     * @param position
+     */
     private void observeText(final TextView tv, final int position) {
         ViewTreeObserver observer = tv.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -276,22 +294,25 @@ public class ScrollIndicator extends HorizontalScrollView {
                     tv.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 }
                 int size = tv.getMeasuredWidth() + marginText;
-                if (titles.size() > 4) {
+                if (type == TabLayoutType.MUTI) {
                     underlineWidthList.add(size);
                 } else {
                     underlineWidthList.add(size > tabViewWidth ? tabViewWidth : size);
                 }
-                RelativeLayout rl = (RelativeLayout) tv.getParent();
-                LinearLayout.LayoutParams pm = (LinearLayout.LayoutParams) rl.getLayoutParams();
-                pm.width = size;
-                rl.setLayoutParams(pm);
+                //当为muti的时候需要重新layout rl
+                if (type == TabLayoutType.MUTI) {
+                    RelativeLayout rl = (RelativeLayout) tv.getParent();
+                    LinearLayout.LayoutParams pm = (LinearLayout.LayoutParams) rl.getLayoutParams();
+                    pm.width = size;
+                    rl.setLayoutParams(pm);
+                }
                 if (position == 0) {
                     int extra = 0;
                     if (titles.size() < 5) {
                         extra = (tabViewWidth - underlineWidthList.get(0)) / 2;
                     }
                     int start = marginLeft + extra;
-                    int stop = underlineWidthList.get(0) + marginLeft - extra;
+                    int stop = underlineWidthList.get(0) + start;
                     dynamicLine.updateView(start, stop);
                 }
             }
