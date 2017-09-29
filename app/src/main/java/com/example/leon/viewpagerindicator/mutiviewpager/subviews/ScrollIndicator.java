@@ -80,6 +80,10 @@ public class ScrollIndicator extends HorizontalScrollView {
     private int screenWidth;
 
     private TabLayoutType type;
+    /**
+     * 当点击tab时不增加颜色切换效果，当左右滑动viewpager时增加颜色渐变切换效果。
+     */
+    private boolean isClick = false;
 
     public ScrollIndicator(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -95,7 +99,6 @@ public class ScrollIndicator extends HorizontalScrollView {
         textLayout.setLayoutParams(contentParams);
         textLayout.setOrientation(LinearLayout.HORIZONTAL);
         addView(contentLayout, contentParams);
-        // 初始化paint
     }
 
     /**
@@ -158,7 +161,18 @@ public class ScrollIndicator extends HorizontalScrollView {
                     }
                     dynamicLine.updateView(start, stop);
                 }
-
+                //用来实现颜色变化
+                if (!isClick) {
+                    if (position < lastPosition) {
+                        gradientTextColor(position, (1 - positionOffset), normalColor, highLightColor);
+                        gradientTextColor(lastPosition, (1 - positionOffset), highLightColor, normalColor);
+                    } else {
+                        if (position < titles.size() - 1) {
+                            gradientTextColor(position, positionOffset, highLightColor, normalColor);
+                            gradientTextColor(position + 1, positionOffset, normalColor, highLightColor);
+                        }
+                    }
+                }
             }
 
             @Override
@@ -166,7 +180,6 @@ public class ScrollIndicator extends HorizontalScrollView {
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageSelected(position);
                 }
-                highlightText(position);
             }
 
             @Override
@@ -176,7 +189,7 @@ public class ScrollIndicator extends HorizontalScrollView {
                 }
                 if (state == ViewPager.SCROLL_STATE_SETTLING) {
                     boolean scrollRight = lastPosition < viewPager.getCurrentItem();
-                    lastPosition = viewPager.getCurrentItem();
+                    isClick = false;
                     if (lastPosition + 1 < textViews.size() && lastPosition - 1 >= 0) {
                         textViews.get(lastPosition).getLocationOnScreen(location);
                         /**
@@ -189,6 +202,9 @@ public class ScrollIndicator extends HorizontalScrollView {
                             ScrollIndicator.this.smoothScrollBy(location[0] - screenWidth / 2, 0);
                         }
                     }
+                }
+                if (state == ViewPager.SCROLL_STATE_IDLE) {
+                    lastPosition = viewPager.getCurrentItem();
                 }
             }
         });
@@ -222,6 +238,7 @@ public class ScrollIndicator extends HorizontalScrollView {
                 public void onClick(View v) {
                     viewPager.setCurrentItem(finalI);
                     highlightText(finalI);
+                    isClick = true;
                 }
             });
         }
@@ -233,6 +250,12 @@ public class ScrollIndicator extends HorizontalScrollView {
         contentLayout.addView(dynamicLine);
     }
 
+    /**
+     * 获得tab的宽度
+     *
+     * @param visibleCount
+     * @return
+     */
     private int getTabWidth(int visibleCount) {
         if (type == TabLayoutType.AVERAGE) {
             return screenWidth / (visibleCount);
@@ -244,7 +267,7 @@ public class ScrollIndicator extends HorizontalScrollView {
     }
 
     /**
-     * 用来生成tab 目前暂定为TextView,决定它的layoutParams
+     * 用来动态生成tab 目前暂定为TextView,决定它的layoutParams
      *
      * @param title
      * @return
@@ -280,7 +303,7 @@ public class ScrollIndicator extends HorizontalScrollView {
     }
 
     /**
-     * 给text设置全局观察者，需要当textview被measure之后才能动态确定每条underline的长度
+     * 给text设置全局观察者，需要当textView被measure之后才能动态确定每条underline的长度
      *
      * @param tv
      * @param position
@@ -324,14 +347,27 @@ public class ScrollIndicator extends HorizontalScrollView {
      * 用来改变字的颜色
      */
     private void highlightText(int position) {
-        for (int i = 0; i < textLayout.getChildCount(); i++) {
-            RelativeLayout rl = (RelativeLayout) textLayout.getChildAt(i);
-            TextView tv = (TextView) rl.findViewById(R.id.tab_name);
-            tv.setTextColor(normalColor);
-        }
+        RelativeLayout rl1 = (RelativeLayout) textLayout.getChildAt(lastPosition);
+        TextView tv1 = (TextView) rl1.findViewById(R.id.tab_name);
+        tv1.setTextColor(normalColor);
         RelativeLayout rl = (RelativeLayout) textLayout.getChildAt(position);
         TextView tv = (TextView) rl.findViewById(R.id.tab_name);
         tv.setTextColor(highLightColor);
+    }
+
+    /**
+     * 用来渐变text颜色
+     *
+     * @param position
+     * @param fraction
+     * @param startColor
+     * @param endColor
+     */
+    private void gradientTextColor(int position, float fraction, int startColor, int endColor) {
+        RelativeLayout rl1 = (RelativeLayout) textLayout.getChildAt(position);
+        TextView tv1 = (TextView) rl1.findViewById(R.id.tab_name);
+        tv1.getCurrentTextColor();
+        tv1.setTextColor(TabUtil.getCurrentColor(fraction, startColor, endColor));
     }
 
     public interface OnPageChangeListener {
