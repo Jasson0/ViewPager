@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -55,11 +56,14 @@ public class ScrollIndicator extends HorizontalScrollView {
     private LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
     private LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
     private DynamicLine dynamicLine;
+    private int lastPosition;
+    private int[] location = new int[2];
 
     public void setFragments(TabFragment[] mFragments) {
         this.mFragments = mFragments;
     }
 
+    private ArrayList<TextView> textViews = new ArrayList<>();
     /**
      * 当自定义控件本身将接口使用时，需要提供给用户同样的回调
      */
@@ -115,11 +119,11 @@ public class ScrollIndicator extends HorizontalScrollView {
      *
      * @param viewPager
      */
-    public void setViewPager(ViewPager viewPager) {
+    public void setViewPager(final ViewPager viewPager) {
         this.viewPager = viewPager;
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            public void onPageScrolled(final int position, final float positionOffset, int positionOffsetPixels) {
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
                 }
@@ -141,7 +145,6 @@ public class ScrollIndicator extends HorizontalScrollView {
                         stop = (int) (margin + underlineWidthList.get(position) + underlineWidthList.get(position + 1) * positionOffset + marginLeft);
                     }
                     dynamicLine.updateView(start, stop);
-                    scroll(position, positionOffset);
                 }
 
             }
@@ -159,7 +162,22 @@ public class ScrollIndicator extends HorizontalScrollView {
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageScrollStateChanged(state);
                 }
-
+                if (state == ViewPager.SCROLL_STATE_SETTLING) {
+                    boolean scrollRight = lastPosition < viewPager.getCurrentItem();
+                    lastPosition = viewPager.getCurrentItem();
+                    if (lastPosition + 1 < textViews.size() && lastPosition - 1 >= 0) {
+                        textViews.get(lastPosition).getLocationOnScreen(location);
+                        /**
+                         * 下面几行代码，解决页面滑到的TAB页时对应的TextView对应，TextView处于屏幕外面，
+                         * 这个时候就需要将HorizontalScrollView滑动到屏幕中间。
+                         */
+                        if (location[0] > ToolUtil.getScreenWidth(getContext())/2 && scrollRight) {
+                            ScrollIndicator.this.smoothScrollBy(location[0]-ToolUtil.getScreenWidth(getContext())/2, 0);
+                        } else if (location[0] < ToolUtil.getScreenWidth(getContext())/2 && !scrollRight) {
+                            ScrollIndicator.this.smoothScrollBy(location[0]-ToolUtil.getScreenWidth(getContext())/2, 0);
+                        }
+                    }
+                }
             }
         });
         viewPager.setCurrentItem(0);
@@ -203,20 +221,12 @@ public class ScrollIndicator extends HorizontalScrollView {
 
     /**
      * 如果超过visible的个数的时候，需要将整个horizontalView横移
-     *
-     * @param position
      */
-    private void scroll(int position, float offset) {
-        if (position >= 0 && position < textLayout.getChildCount() - 1 && position >= mVisibleCount - 3) {
-            if (titles.size() < 5) {
-                this.smoothScrollTo((int) ((position - (mVisibleCount - 3)) * tabViewWidth + offset * tabViewWidth), 0);
-            } else {
-                int margin = 0;
-                for (int i = mVisibleCount-3; i < position; i++) {
-                    margin += underlineWidthList.get(i);
-                }
-                this.smoothScrollTo((int) (margin + offset * underlineWidthList.get(position)), 0);
-            }
+    private void scroll(boolean scrollRight) {
+        if (scrollRight) {
+            this.smoothScrollBy(ToolUtil.getScreenWidth(getContext()) / 2, 0);
+        } else {
+            this.smoothScrollBy(-ToolUtil.getScreenWidth(getContext()) / 2, 0);
         }
     }
 
@@ -251,6 +261,7 @@ public class ScrollIndicator extends HorizontalScrollView {
         tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, textSize);
         tv.setTextColor(normalColor);
         tv.setLayoutParams(paramtv);
+        textViews.add(tv);
         tvRl.addView(tv);
         observeText(tv, position);
         return tvRl;
