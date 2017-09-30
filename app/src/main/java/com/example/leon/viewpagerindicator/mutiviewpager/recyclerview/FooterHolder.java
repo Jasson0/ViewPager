@@ -15,7 +15,6 @@ import com.example.leon.viewpagerindicator.R;
 
 public class FooterHolder extends MyViewHolder {
     private View mLoadingView;
-    private View mNetworkErrorView;
     private View mTheEndView;
 
     public enum State {
@@ -36,9 +35,8 @@ public class FooterHolder extends MyViewHolder {
         return footerHolder;
     }
 
-    public void initFootView(int loadingId, int endId, int networkErrorId) {
+    public void initFootView(int loadingId, int endId) {
         mLoadingView = getView(loadingId);
-        mNetworkErrorView = getView(networkErrorId);
         mTheEndView = getView(endId);
     }
 
@@ -51,9 +49,6 @@ public class FooterHolder extends MyViewHolder {
             case NoMore:
                 mTheEndView.setVisibility(View.VISIBLE);
                 break;
-            case NetWorkError:
-                mNetworkErrorView.setVisibility(View.VISIBLE);
-                break;
         }
     }
 
@@ -63,9 +58,6 @@ public class FooterHolder extends MyViewHolder {
         }
         if (mTheEndView != null) {
             mTheEndView.setVisibility(View.GONE);
-        }
-        if (mNetworkErrorView != null) {
-            mNetworkErrorView.setVisibility(View.GONE);
         }
     }
 }

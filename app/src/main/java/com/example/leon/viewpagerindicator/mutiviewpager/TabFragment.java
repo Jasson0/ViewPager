@@ -1,7 +1,6 @@
 package com.example.leon.viewpagerindicator.mutiviewpager;
 
 import android.app.Activity;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -17,18 +16,16 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
-import java.sql.Time;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.example.leon.viewpagerindicator.MainActivity;
 import com.example.leon.viewpagerindicator.R;
-import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.EndLessOnScroll;
-import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.FooterHolder;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.MultiViewAdapter;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.OnItemClickListener;
-import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.RecyclerViewAdapter;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.BaseViewHolder;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.FootModel;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.NormalModel;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.VisitableModel;
 
 public class TabFragment extends Fragment implements OnItemClickListener {
     public static final String TITLE = "title";
@@ -41,10 +38,10 @@ public class TabFragment extends Fragment implements OnItemClickListener {
     private RecyclerView mRecyclerView;
     private boolean isLoading;
     // private TextView mTextView;
-    private List<String> mDatas = new ArrayList<String>();
+    private List<VisitableModel> mDatas = new ArrayList<>();
     private Handler handler = new Handler();
-    RecyclerViewAdapter adapter;
-    private FooterHolder.State mState;
+    MultiViewAdapter adapter;
+    private FootModel.State mState;
     private ImageView goTop;
     private long leon;
     private Animation showAnimation;
@@ -59,15 +56,28 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mTitle = getArguments().getString(TITLE);
-            mDatas = (List<String>) getArguments().getSerializable(DATA);
+            mDatas.addAll(initData((List<String>) getArguments().getSerializable(DATA)));
+            mDatas.add(new FootModel(FootModel.State.Loading));
         }
         showAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_up);
         hiddenAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down);
     }
 
+    private List<VisitableModel> initData(List<String> datas) {
+        List<VisitableModel> dataList = new ArrayList<>();
+        for (String data : datas) {
+            VisitableModel dataModel;
+            dataModel = new NormalModel(data);
+            dataList.add(dataModel);
+        }
+        return dataList;
+    }
+
     private int temp = 0;
 
     private long lastTime;
+
+    private LinearLayoutManager linearLayoutManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -80,18 +90,17 @@ public class TabFragment extends Fragment implements OnItemClickListener {
                 mRecyclerView.smoothScrollToPosition(0);
             }
         });
-        adapter = new RecyclerViewAdapter(getContext(), mDatas);
-        adapter.setOnItemClickListener(this);
-        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        adapter = new MultiViewAdapter(getContext(), mDatas);
+        linearLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView = (RecyclerView) view.findViewById(R.id.id_stickynavlayout_innerscrollview);
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setAdapter(adapter);
+
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(final RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 Log.d("test", "StateChanged = " + newState);
-                setState(FooterHolder.State.Loading);
                 final int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     if (lastVisibleItemPosition + 1 == adapter.getItemCount()) {
@@ -102,17 +111,14 @@ public class TabFragment extends Fragment implements OnItemClickListener {
                                 if (mCurrentCounter < TOTAL_COUNTER) {
                                     getData();
                                     Log.d("test", "load more completed");
-//                                    setState(FooterHolder.State.Normal);
                                 } else {
-//                                setState(FooterHolder.State.NoMore);
-//                            recyclerView.smoothScrollToPosition(lastVisibleItemPosition-2);
-                                    recyclerView.smoothScrollBy(0, -200);
-//                            adapter.remove(adapter.getItemCount() - 1);
-//                                setState(FooterHolder.State.NetWorkError);
+                                    FootModel model = (FootModel) mDatas.get(mDatas.size() - 1);
+                                    model.setFootState(FootModel.State.NoMore);
+                                    setState(model);
+//                                    recyclerView.smoothScrollBy(0, -200);
                                 }
                             }
                         }, 1000);
-//                    temp++;
                     }
                 }
             }
@@ -125,7 +131,6 @@ public class TabFragment extends Fragment implements OnItemClickListener {
                 if (lastVisibleItemPosition > 20) {
                     if (goTop.getVisibility() == View.GONE) {
                         goTop.startAnimation(showAnimation);
-                        leon = System.currentTimeMillis();
                     }
                     goTop.setVisibility(View.VISIBLE);
                 } else {
@@ -139,21 +144,19 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         return view;
     }
 
-    protected void setState(FooterHolder.State mState) {
-        this.mState = mState;
+    protected void setState(final FootModel footModel) {
         ((Activity) getContext()).runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                changeAdaperState();
+                if (adapter != null && adapter.viewHolder != null) {
+                    //找到最后一个item，即foot的viewHolder。
+                    int firstItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
+                    View view = mRecyclerView.getChildAt(mDatas.size() - 1 - firstItemPosition);
+                    BaseViewHolder viewHolder = (BaseViewHolder) mRecyclerView.getChildViewHolder(view);
+                    viewHolder.changeView(footModel);
+                }
             }
         });
-    }
-
-    //改变底部bottom的样式
-    protected void changeAdaperState() {
-        if (adapter != null && adapter.footerHolder != null) {
-            adapter.footerHolder.changeState(mState);
-        }
     }
 
     /**
@@ -164,7 +167,7 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         for (int i = 0; i < 6; i++) {
             newData.add("上拉加载产生" + i);
         }
-        mDatas.addAll(newData);
+        mDatas.addAll(mDatas.size() - 2, initData(newData));
         mCurrentCounter += 6;
         adapter.setDataList(mDatas);
         adapter.notifyDataSetChanged();
@@ -181,7 +184,7 @@ public class TabFragment extends Fragment implements OnItemClickListener {
 
     @Override
     public void onItemClick(ViewGroup parent, View view, Object o, int position) {
-        Toast.makeText(getContext(),"11111",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "11111", Toast.LENGTH_SHORT).show();
     }
 
     @Override

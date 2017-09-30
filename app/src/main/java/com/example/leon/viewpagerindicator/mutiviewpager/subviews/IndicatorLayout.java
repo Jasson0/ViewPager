@@ -56,15 +56,15 @@ public class IndicatorLayout extends LinearLayout {
         titleList.add("游记");
         ArrayList<String> mDatas = new ArrayList<>();
         for (int j = 0; j < 20; j++) {
-            mDatas.add("222" + " -> " + 1);
+            if (j<10) {
+                mDatas.add("2");
+            }else {
+                mDatas.add("222222" + " -> " + j);
+            }
         }
         TabFragment[] mFragments = new TabFragment[titleList.size()];
         for (int i = 0; i < titleList.size(); i++) {
-            ArrayList<String> leon = new ArrayList<>();
-            for (int j = 0; j < mDatas.size(); j++) {
-                leon.add(mDatas.get(i));
-            }
-            mFragments[i] = TabFragment.newInstance(titleList.get(i),leon);
+            mFragments[i] = TabFragment.newInstance(titleList.get(i),mDatas);
         }
         MyAdapter myAdapter = new MyAdapter(activity.getSupportFragmentManager(), titleList);
         myAdapter.setFragments(mFragments);

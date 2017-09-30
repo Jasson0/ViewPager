@@ -81,7 +81,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<MyViewHolder> {
             return myViewHolder;
         }
         footerHolder = FooterHolder.createViewHolder(context, parent, R.layout.foot_layout);
-        footerHolder.initFootView(R.id.loading_view, R.id.end_views, R.id.network_error_views);
+        footerHolder.initFootView(R.id.loading_view, R.id.end_views);
         return footerHolder;
     }
 

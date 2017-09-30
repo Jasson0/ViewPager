@@ -5,7 +5,9 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.v4.view.ViewPager;
+import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -24,11 +26,15 @@ import com.example.leon.viewpagerindicator.mutiviewpager.utils.ToolUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.graphics.Color.parseColor;
+
 /**
  * Created by leon on 2017/9/18.
  */
 
 public class ScrollIndicator extends HorizontalScrollView {
+    private int currentPosition;
+
     /**
      * 目前支持的类型，均分，有margin的均分（margin=tabWidth/2，小于4个）,MUTI指的是超过4个的情况
      */
@@ -61,8 +67,8 @@ public class ScrollIndicator extends HorizontalScrollView {
     private TabFragment[] mFragments;
     private LinearLayout textLayout;
     private LinearLayout contentLayout;
-    private LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-    private LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+    private LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    private LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     private DynamicLine dynamicLine;
     private int lastPosition;
     private int[] location = new int[2];
@@ -167,7 +173,7 @@ public class ScrollIndicator extends HorizontalScrollView {
                         gradientTextColor(position, (1 - positionOffset), normalColor, highLightColor);
                         gradientTextColor(lastPosition, (1 - positionOffset), highLightColor, normalColor);
                     } else {
-                        if (position < titles.size() - 1) {
+                        if (position < titles.size() - 1 && positionOffset > 0) {
                             gradientTextColor(position, positionOffset, highLightColor, normalColor);
                             gradientTextColor(position + 1, positionOffset, normalColor, highLightColor);
                         }
@@ -177,6 +183,7 @@ public class ScrollIndicator extends HorizontalScrollView {
 
             @Override
             public void onPageSelected(int position) {
+                Log.e("leon","onPageSelected");
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageSelected(position);
                 }
@@ -184,14 +191,14 @@ public class ScrollIndicator extends HorizontalScrollView {
 
             @Override
             public void onPageScrollStateChanged(int state) {
+                Log.e("leon","onPageScrollStateChanged = "+state);
                 if (onPageChangeListener != null) {
                     onPageChangeListener.onPageScrollStateChanged(state);
                 }
-                if (state == ViewPager.SCROLL_STATE_SETTLING) {
+                if (state == ViewPager.SCROLL_STATE_IDLE) {
                     boolean scrollRight = lastPosition < viewPager.getCurrentItem();
-                    isClick = false;
                     if (lastPosition + 1 < textViews.size() && lastPosition - 1 >= 0) {
-                        textViews.get(lastPosition).getLocationOnScreen(location);
+                        textViews.get(viewPager.getCurrentItem()).getLocationOnScreen(location);
                         /**
                          * 下面几行代码，解决页面滑到的TAB页时对应的TextView对应，TextView处于屏幕外面，
                          * 这个时候就需要将HorizontalScrollView滑动到屏幕中间。
@@ -202,8 +209,6 @@ public class ScrollIndicator extends HorizontalScrollView {
                             ScrollIndicator.this.smoothScrollBy(location[0] - screenWidth / 2, 0);
                         }
                     }
-                }
-                if (state == ViewPager.SCROLL_STATE_IDLE) {
                     lastPosition = viewPager.getCurrentItem();
                 }
             }
@@ -236,6 +241,9 @@ public class ScrollIndicator extends HorizontalScrollView {
             view.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (lastPosition == finalI) {
+                        mFragments[finalI].getmRecyclerView().smoothScrollToPosition(0);
+                    }
                     viewPager.setCurrentItem(finalI);
                     highlightText(finalI);
                     isClick = true;
@@ -337,6 +345,7 @@ public class ScrollIndicator extends HorizontalScrollView {
                     int start = marginLeft + extra;
                     int stop = underlineWidthList.get(0) + start;
                     dynamicLine.updateView(start, stop);
+                    highlightText(0);
                 }
             }
         });
@@ -347,12 +356,19 @@ public class ScrollIndicator extends HorizontalScrollView {
      * 用来改变字的颜色
      */
     private void highlightText(int position) {
-        RelativeLayout rl1 = (RelativeLayout) textLayout.getChildAt(lastPosition);
-        TextView tv1 = (TextView) rl1.findViewById(R.id.tab_name);
-        tv1.setTextColor(normalColor);
+        currentPosition = position;
+        for (int i = 0; i < textLayout.getChildCount(); i++) {
+            RelativeLayout rl = (RelativeLayout) textLayout.getChildAt(i);
+            TextView tv = (TextView) rl.findViewById(R.id.tab_name);
+            tv.setTextColor(normalColor);
+            TextPaint tp = tv.getPaint();
+            tp.setFakeBoldText(false);
+        }
         RelativeLayout rl = (RelativeLayout) textLayout.getChildAt(position);
         TextView tv = (TextView) rl.findViewById(R.id.tab_name);
         tv.setTextColor(highLightColor);
+        TextPaint tp = tv.getPaint();
+        tp.setFakeBoldText(true);
     }
 
     /**
