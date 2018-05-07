@@ -2,16 +2,13 @@ package com.example.leon.viewpagerindicator;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.leon.viewpagerindicator.mutiviewpager.subviews.Indicator;
+import com.example.leon.viewpagerindicator.mutiviewpager.abandoncode.Indicator;
 import com.example.leon.viewpagerindicator.mutiviewpager.subviews.IndicatorLayout;
 import com.example.leon.viewpagerindicator.mutiviewpager.subviews.MutiLayout;
 import com.example.leon.viewpagerindicator.nestedscrolling.StickyNavLayout;

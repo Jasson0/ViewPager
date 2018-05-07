@@ -6,21 +6,17 @@
                 android:orientation="horizontal"
                 android:scrollbars="none">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/id_stickynavlayout_innerscrollview"
+    <ViewStub
+        android:id="@+id/loading_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-    <ImageView
-        android:id="@+id/go_top"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="80dp"
-        android:background="@drawable/go_top"
-        android:visibility="gone"
-        tools:visibility="visible"/>
-
+        android:layout_height="match_parent"
+        android:inflatedId="@+id/loading_layout_after"
+        android:layout="@layout/load_init_layout"/>
+    <ViewStub
+        android:id="@+id/display_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:inflatedId="@+id/display_layout_after"
+        android:layout="@layout/display_data_layout"/>
 
 </RelativeLayout>

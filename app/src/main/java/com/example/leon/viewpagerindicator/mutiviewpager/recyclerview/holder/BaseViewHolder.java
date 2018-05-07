@@ -26,7 +26,7 @@ public abstract class BaseViewHolder<T> extends RecyclerView.ViewHolder {
     private SparseArray<View> views;
     private View mItemView;
 
-    public BaseViewHolder(View itemView) {
+    public BaseViewHolder(View itemView, MultiViewAdapter adapter) {
         super(itemView);
         views = new SparseArray<>();
         this.mItemView = itemView;

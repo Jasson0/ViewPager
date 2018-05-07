@@ -1,4 +1,4 @@
-package com.example.leon.viewpagerindicator.mutiviewpager.subviews;
+package com.example.leon.viewpagerindicator.mutiviewpager.abandoncode;
 
 import android.content.Context;
 import android.content.res.TypedArray;

@@ -1,6 +1,7 @@
 package com.example.leon.viewpagerindicator.mutiviewpager.subviews;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
@@ -16,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.OverScroller;
 
 import com.example.leon.viewpagerindicator.R;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.MultiViewAdapter;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.NormalViewHolder;
 
 
 /**
@@ -121,6 +124,9 @@ public class MutiLayout extends ViewGroup {
                 case MotionEvent.ACTION_MOVE:
                     float dy = y - mLastY;
                     getCurrentRecyclerView();
+                    if (recyclerView == null) {
+                        break;
+                    }
                     View view = recyclerView.getChildAt(0);
                     if (!isInControl && view != null && view.getTop() == 0 && isTopHidden && dy > 0) {
                         isInControl = true;
@@ -150,7 +156,12 @@ public class MutiLayout extends ViewGroup {
                 mLastY = y;
                 return true;
             case MotionEvent.ACTION_MOVE:
+                Log.e("leon111", "move");
                 float dy = y - mLastY;
+//                if ((distanceFromViewPagerToX - getMeasuredHeight()) < (-dy)) {
+//                    Log.e("leon", "--------");
+//                }
+
                 //判断是滑动还是点击
                 if (!mDragging && Math.abs(dy) > mTouchSlop) {
                     mDragging = true;
@@ -216,9 +227,31 @@ public class MutiLayout extends ViewGroup {
 
     }
 
+    private boolean isNotTraceWrite = true;
+
     @Override
     public void computeScroll() {
+        if (recyclerView != null) {
+            RecyclerView.Adapter adapter = recyclerView.getAdapter();
+            for (int i = 0; i < adapter.getItemCount(); i++) {
+                View child = recyclerView.getChildAt(i);
+                if (child != null) {
+                    NormalViewHolder holder = (NormalViewHolder) recyclerView.getChildViewHolder(child);
+                    if (adapter instanceof MultiViewAdapter) {
+                        holder.t();
+                    }
+                }
+            }
+            Rect rect = new Rect(recyclerView.getLeft(), recyclerView.getTop(), recyclerView.getRight(), recyclerView.getBottom());
+            if (recyclerView.getLocalVisibleRect(rect) && isNotTraceWrite) {
+                isNotTraceWrite = false;
+            }
+            if (!recyclerView.getLocalVisibleRect(rect)) {
+                isNotTraceWrite = true;
+            }
+        }
         if (scroller.computeScrollOffset()) {
+            Log.e("leon111", "scroll");
             scrollTo(0, scroller.getCurrY());
             invalidate();
         }
@@ -249,6 +282,9 @@ public class MutiLayout extends ViewGroup {
                 getCurrentRecyclerView();
                 if (Math.abs(dy) > mTouchSlop) {
                     //滑动
+                    if (recyclerView == null) {
+                        return true;
+                    }
                     mDragging = true;
                     View view = recyclerView.getChildAt(0);
                     // 拦截条件：topView没有隐藏

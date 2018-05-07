@@ -355,7 +355,7 @@ public class ScrollIndicator extends HorizontalScrollView {
     /**
      * 用来改变字的颜色
      */
-    private void highlightText(int position) {
+    public void highlightText(int position) {
         currentPosition = position;
         for (int i = 0; i < textLayout.getChildCount(); i++) {
             RelativeLayout rl = (RelativeLayout) textLayout.getChildAt(i);

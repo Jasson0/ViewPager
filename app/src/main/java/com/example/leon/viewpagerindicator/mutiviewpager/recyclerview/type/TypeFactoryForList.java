@@ -3,6 +3,7 @@ package com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.type;
 import android.view.View;
 
 import com.example.leon.viewpagerindicator.R;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.MultiViewAdapter;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.BaseViewHolder;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.FootViewHolder;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.NormalViewHolder;
@@ -28,11 +29,11 @@ public class TypeFactoryForList implements TypeFactory {
     }
 
     @Override
-    public BaseViewHolder createViewHolder(int type, View itemView) {
+    public BaseViewHolder createViewHolder(int type, View itemView, MultiViewAdapter adapter) {
         if (type == TYPE_RESOURCE_NORMAL) {
-            return new NormalViewHolder(itemView);
+            return new NormalViewHolder(itemView, adapter);
         } else if (type == TYPE_RESOURCE_FOOT) {
-            return new FootViewHolder(itemView);
+            return new FootViewHolder(itemView, adapter);
         }
         return null;
     }

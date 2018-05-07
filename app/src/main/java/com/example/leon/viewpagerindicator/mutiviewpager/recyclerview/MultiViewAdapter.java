@@ -19,16 +19,16 @@ import java.util.List;
 /**
  * Created by leon on 2017/9/14.
  * ●　　抽象访问者(Visitor)角色：声明了一个或者多个方法操作，形成所有的具体访问者角色必须实现的接口。（对应typeFactory）
-
- 　●　　具体访问者(ConcreteVisitor)角色：实现抽象访问者所声明的接口，也就是抽象访问者所声明的各个访问操作。（对应typeFactoryList）
-
- 　●　　抽象节点(Node)角色：声明一个接受操作，接受一个访问者对象作为一个参数。(对应visitableModel)
-
- 　●　　具体节点(ConcreteNode)角色：实现了抽象节点所规定的接受操作。（对应其他实现了对应visitableModel的model）
-
- 　●　　结构对象(ObjectStructure)角色：有如下的责任，可以遍历结构中的所有元素；
- 如果需要，提供一个高层次的接口让访问者对象可以访问每一个元素；如果需要，可以设计成一个复合对象或者一个聚集，
- 如List或Set。（holder中的类）
+ * <p>
+ * 　●　　具体访问者(ConcreteVisitor)角色：实现抽象访问者所声明的接口，也就是抽象访问者所声明的各个访问操作。（对应typeFactoryList）
+ * <p>
+ * 　●　　抽象节点(Node)角色：声明一个接受操作，接受一个访问者对象作为一个参数。(对应visitableModel)
+ * <p>
+ * 　●　　具体节点(ConcreteNode)角色：实现了抽象节点所规定的接受操作。（对应其他实现了对应visitableModel的model）
+ * <p>
+ * 　●　　结构对象(ObjectStructure)角色：有如下的责任，可以遍历结构中的所有元素；
+ * 如果需要，提供一个高层次的接口让访问者对象可以访问每一个元素；如果需要，可以设计成一个复合对象或者一个聚集，
+ * 如List或Set。（holder中的类）
  */
 
 public class MultiViewAdapter extends RecyclerView.Adapter<BaseViewHolder> {
@@ -42,18 +42,51 @@ public class MultiViewAdapter extends RecyclerView.Adapter<BaseViewHolder> {
     private TypeFactory typeFactory;
     private Context context;
     public BaseViewHolder viewHolder;
+    public Test test;
+
+    public void setTest(Test test) {
+        this.test = test;
+    }
+
+    public interface Test {
+        void t();
+    }
 
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(context).inflate(viewType, parent,
                 false);
-        viewHolder = typeFactory.createViewHolder(viewType, itemView);
-        return typeFactory.createViewHolder(viewType, itemView);
+        viewHolder = typeFactory.createViewHolder(viewType, itemView, this);
+        return typeFactory.createViewHolder(viewType, itemView, this);
+    }
+
+    public void fuck() {
+        if (test != null) {
+            test.t();
+        }
     }
 
     @Override
     public void onBindViewHolder(BaseViewHolder holder, int position) {
         holder.setUpView(models.get(position), position, this);
+    }
+
+    @Override
+    public void onViewAttachedToWindow(BaseViewHolder holder) {
+//        super.onViewAttachedToWindow(holder);
+        Log.e("leon", "000000");
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+//        super.onAttachedToRecyclerView(recyclerView);
+        Log.e("leon", "11111111");
+    }
+
+    @Override
+    public void registerAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+//        super.registerAdapterDataObserver(observer);
+        Log.e("leon", "22222222");
     }
 
     public List<VisitableModel> getDataList() {

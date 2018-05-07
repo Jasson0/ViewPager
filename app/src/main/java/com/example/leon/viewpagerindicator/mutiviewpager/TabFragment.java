@@ -10,9 +10,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 
@@ -23,6 +25,7 @@ import com.example.leon.viewpagerindicator.R;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.MultiViewAdapter;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.OnItemClickListener;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.BaseViewHolder;
+import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder.NormalViewHolder;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.FootModel;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.NormalModel;
 import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.VisitableModel;
@@ -51,16 +54,50 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         return mRecyclerView;
     }
 
+    private List<String> dataList = new ArrayList<>();
+
+    public void requestData() {
+        if (dataList == null) {
+            dataList = new ArrayList<>();
+            for (int j = 0; j < 20; j++) {
+                if (j < 10) {
+                    dataList.add("2");
+                } else {
+                    dataList.add("222222" + " -> " + j);
+                }
+            }
+            mDatas.addAll(initData(dataList));
+            mDatas.add(new FootModel(FootModel.State.Loading));
+            displayLayout.inflate();
+            initDisplayView();
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        //fragment可见时调用
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mTitle = getArguments().getString(TITLE);
-            mDatas.addAll(initData((List<String>) getArguments().getSerializable(DATA)));
-            mDatas.add(new FootModel(FootModel.State.Loading));
+            dataList = (List<String>) getArguments().getSerializable(DATA);
+            if (dataList != null) {
+                mDatas.addAll(initData(dataList));
+                mDatas.add(new FootModel(FootModel.State.Loading));
+            }
         }
         showAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_up);
         hiddenAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.e("lux","onResume");
     }
 
     private List<VisitableModel> initData(List<String> datas) {
@@ -79,11 +116,29 @@ public class TabFragment extends Fragment implements OnItemClickListener {
 
     private LinearLayoutManager linearLayoutManager;
 
+    private ViewStub loadingLayout;
+    private ViewStub displayLayout;
+    private View view;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_tab, container, false);
-        goTop = (ImageView) view.findViewById(R.id.go_top);
+        view = inflater.inflate(R.layout.fragment_tab, container, false);
+        loadingLayout = (ViewStub) view.findViewById(R.id.loading_layout);
+        displayLayout = (ViewStub) view.findViewById(R.id.display_layout);
+        Log.e("leon", "dataList = " + dataList);
+        if (dataList != null) {
+            displayLayout.inflate();
+            initDisplayView();
+        } else {
+            loadingLayout.inflate();
+        }
+        return view;
+    }
+
+    private void initDisplayView() {
+        View display = view.findViewById(R.id.display_layout_after);
+        goTop = (ImageView) display.findViewById(R.id.go_top);
         goTop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,7 +147,7 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         });
         adapter = new MultiViewAdapter(getContext(), mDatas);
         linearLayoutManager = new LinearLayoutManager(getActivity());
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.id_stickynavlayout_innerscrollview);
+        mRecyclerView = (RecyclerView) display.findViewById(R.id.id_stickynavlayout_innerscrollview);
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setAdapter(adapter);
 
@@ -128,6 +183,14 @@ public class TabFragment extends Fragment implements OnItemClickListener {
                 super.onScrolled(recyclerView, dx, dy);
                 Log.d("test", "onScrolled");
                 final int lastVisibleItemPosition = linearLayoutManager.findLastVisibleItemPosition();
+                final int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
+                View childView = recyclerView.getChildAt(lastVisibleItemPosition - firstVisibleItemPosition);
+                if (childView != null) {
+                    if (recyclerView.getChildViewHolder(childView) instanceof NormalViewHolder) {
+                        NormalViewHolder holder = (NormalViewHolder) recyclerView.getChildViewHolder(childView);
+                        holder.t();
+                    }
+                }
                 if (lastVisibleItemPosition > 20) {
                     if (goTop.getVisibility() == View.GONE) {
                         goTop.startAnimation(showAnimation);
@@ -141,7 +204,6 @@ public class TabFragment extends Fragment implements OnItemClickListener {
                 }
             }
         });
-        return view;
     }
 
     protected void setState(final FootModel footModel) {
@@ -178,6 +240,14 @@ public class TabFragment extends Fragment implements OnItemClickListener {
         Bundle bundle = new Bundle();
         bundle.putString(TITLE, title);
         bundle.putSerializable(DATA, dataList);
+        tabFragment.setArguments(bundle);
+        return tabFragment;
+    }
+
+    public static TabFragment newInstance(String title) {
+        TabFragment tabFragment = new TabFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(TITLE, title);
         tabFragment.setArguments(bundle);
         return tabFragment;
     }

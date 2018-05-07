@@ -1,5 +1,6 @@
 package com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.holder;
 
+import android.util.Log;
 import android.view.View;
 
 import com.example.leon.viewpagerindicator.R;
@@ -10,12 +11,13 @@ import com.example.leon.viewpagerindicator.mutiviewpager.recyclerview.model.Foot
  * Created by leon on 2017/9/30.
  */
 
-public class FootViewHolder extends BaseViewHolder<FootModel> {
+public class FootViewHolder extends BaseViewHolder<FootModel> implements MultiViewAdapter.Test {
     private View mLoadingView;
     private View mTheEndView;
 
-    public FootViewHolder(View itemView) {
-        super(itemView);
+    public FootViewHolder(View itemView, MultiViewAdapter adapter) {
+        super(itemView, adapter);
+        adapter.setTest(this);
     }
 
     @Override
@@ -49,5 +51,10 @@ public class FootViewHolder extends BaseViewHolder<FootModel> {
         if (mTheEndView != null) {
             mTheEndView.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void t() {
+        Log.e("leonleon", "ttttt");
     }
 }

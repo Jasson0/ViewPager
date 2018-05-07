@@ -6,7 +6,7 @@
               android:orientation="vertical"
               tools:context=".MainActivity">
 
-    <com.example.leon.viewpagerindicator.mutiviewpager.subviews.Indicator
+    <com.example.leon.viewpagerindicator.mutiviewpager.abandoncode.Indicator
         android:id="@+id/indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,7 +15,7 @@
         indicator:visiable_count="4"
         indicator:color="#FFFF0000" >
 
-    </com.example.leon.viewpagerindicator.mutiviewpager.subviews.Indicator>
+    </com.example.leon.viewpagerindicator.mutiviewpager.abandoncode.Indicator>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/container"
